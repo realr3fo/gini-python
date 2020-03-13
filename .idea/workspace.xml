@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/wikidata.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/refoilmiya.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gini.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +100,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1584111970107</updated>
-      <workItem from="1584111975809" duration="1545000" />
+      <workItem from="1584111975809" duration="5842000" />
     </task>
     <servers />
   </component>
@@ -114,25 +116,41 @@
       <screen x="0" y="23" width="1280" height="711" />
     </state>
     <state x="363" y="188" key="#com.intellij.fileTypes.FileTypeChooser/0.23.1280.711@0.23.1280.711" timestamp="1584112428249" />
-    <state width="1218" height="264" key="GridCell.Tab.0.bottom" timestamp="1584113715779">
+    <state width="1218" height="196" key="GridCell.Tab.0.bottom" timestamp="1584119372624">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1218" height="264" key="GridCell.Tab.0.bottom/0.23.1280.711@0.23.1280.711" timestamp="1584113715779" />
-    <state width="1218" height="264" key="GridCell.Tab.0.center" timestamp="1584113715778">
+    <state width="1218" height="196" key="GridCell.Tab.0.bottom/0.23.1280.711@0.23.1280.711" timestamp="1584119372624" />
+    <state width="1218" height="196" key="GridCell.Tab.0.center" timestamp="1584119372623">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1218" height="264" key="GridCell.Tab.0.center/0.23.1280.711@0.23.1280.711" timestamp="1584113715778" />
-    <state width="1218" height="264" key="GridCell.Tab.0.left" timestamp="1584113715778">
+    <state width="1218" height="196" key="GridCell.Tab.0.center/0.23.1280.711@0.23.1280.711" timestamp="1584119372623" />
+    <state width="1218" height="196" key="GridCell.Tab.0.left" timestamp="1584119372623">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1218" height="264" key="GridCell.Tab.0.left/0.23.1280.711@0.23.1280.711" timestamp="1584113715778" />
-    <state width="1218" height="264" key="GridCell.Tab.0.right" timestamp="1584113715779">
+    <state width="1218" height="196" key="GridCell.Tab.0.left/0.23.1280.711@0.23.1280.711" timestamp="1584119372623" />
+    <state width="1218" height="196" key="GridCell.Tab.0.right" timestamp="1584119372623">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1218" height="264" key="GridCell.Tab.0.right/0.23.1280.711@0.23.1280.711" timestamp="1584113715779" />
+    <state width="1218" height="196" key="GridCell.Tab.0.right/0.23.1280.711@0.23.1280.711" timestamp="1584119372623" />
+    <state width="1218" height="203" key="GridCell.Tab.1.bottom" timestamp="1584114581544">
+      <screen x="0" y="23" width="1280" height="711" />
+    </state>
+    <state width="1218" height="203" key="GridCell.Tab.1.bottom/0.23.1280.711@0.23.1280.711" timestamp="1584114581544" />
+    <state width="1218" height="203" key="GridCell.Tab.1.center" timestamp="1584114581544">
+      <screen x="0" y="23" width="1280" height="711" />
+    </state>
+    <state width="1218" height="203" key="GridCell.Tab.1.center/0.23.1280.711@0.23.1280.711" timestamp="1584114581544" />
+    <state width="1218" height="203" key="GridCell.Tab.1.left" timestamp="1584114581543">
+      <screen x="0" y="23" width="1280" height="711" />
+    </state>
+    <state width="1218" height="203" key="GridCell.Tab.1.left/0.23.1280.711@0.23.1280.711" timestamp="1584114581543" />
+    <state width="1218" height="203" key="GridCell.Tab.1.right" timestamp="1584114581544">
+      <screen x="0" y="23" width="1280" height="711" />
+    </state>
+    <state width="1218" height="203" key="GridCell.Tab.1.right/0.23.1280.711@0.23.1280.711" timestamp="1584114581544" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/python_gini$main.coverage" NAME="main Coverage Results" MODIFIED="1584113715770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/python_gini$main.coverage" NAME="main Coverage Results" MODIFIED="1584119334484" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/python_gini$wikidata.coverage" NAME="wikidata Coverage Results" MODIFIED="1584113494506" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
