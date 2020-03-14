@@ -23,7 +23,9 @@ def get_gini():
 
     endpoint_url = "https://query.wikidata.org/sparql"
 
-    query = """SELECT ?item ?itemLabel (SAMPLE(?image) AS ?image){?item wdt:P31 wd:%s. OPTIONAL { ?item wdt:P18 ?image}FILTER(STRSTARTS(STR(wdt:P18),"http://www.wikidata.org/prop/direct/"))SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }} GROUP BY ?item ?itemLabel""" % entity
+    query = """SELECT ?item ?itemLabel (SAMPLE(?image) AS ?image){?item wdt:P31 wd:%s. OPTIONAL { ?item wdt:P18 
+    ?image}FILTER(STRSTARTS(STR(wdt:P18),"http://www.wikidata.org/prop/direct/"))SERVICE wikibase:label { 
+    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }} GROUP BY ?item ?itemLabel""" % entity
     query_results = get_results(endpoint_url, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
