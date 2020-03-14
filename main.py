@@ -3,18 +3,22 @@ import http
 import json
 
 from flask import Flask, request, abort
-
+from flask_cors import CORS, cross_origin
 from resolver import resolve_unbounded, resolve_bounded
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 @app.route('/', methods=['GET'])
+@cross_origin()
 def welcome():
     return "Welcome!"
 
 
 @app.route('/api/gini', methods=['GET'])
+@cross_origin()
 def get_gini():
     entity = request.args.get('entity')
     if entity is None or entity == "":
