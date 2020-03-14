@@ -23,18 +23,24 @@ def get_gini():
 
     endpoint_url = "https://query.wikidata.org/sparql"
 
-    query = "select DISTINCT ?item {?item  wdt:P31 wd:%s.} LIMIT 500" % entity
+    query = """SELECT ?item ?itemLabel (SAMPLE(?image) AS ?image){?item wdt:P31 wd:%s. OPTIONAL { ?item wdt:P18 ?image}FILTER(STRSTARTS(STR(wdt:P18),"http://www.wikidata.org/prop/direct/"))SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }} GROUP BY ?item ?itemLabel""" % entity
     query_results = get_results(endpoint_url, query)
     item_arr = query_results["results"]["bindings"]
+    if len(item_arr) == 0:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Result is empty row")
     q_arr = []
     for elem in item_arr:
         item_value = elem["item"]["value"]
+        item_label = elem["itemLabel"]["value"]
+        item_image = None
+        if "image" in elem:
+            item_image = elem["image"]["value"]
         q_value = item_value.split("/")[-1]
         query = """SELECT (COUNT(DISTINCT(?p)) AS ?propertyCount) {wd:%s ?p ?o .FILTER(STRSTARTS(STR(?p),
         "http://www.wikidata.org/prop/direct/"))}""" % q_value
         query_results = get_results(endpoint_url, query)
         property_count = int(query_results["results"]["bindings"][0]["propertyCount"]["value"])
-        q_arr.append((q_value, property_count))
+        q_arr.append((q_value, property_count, item_label, item_image))
 
     q_arr = sorted(q_arr, key=lambda x: x[1])
 
