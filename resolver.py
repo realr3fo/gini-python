@@ -14,7 +14,7 @@ def resolve_unbounded(entity):
     query_results = get_results(endpoint_url, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
-        result = {"gini": 0, "data": [], "entities": [[]]}
+        result = {"gini": 0, "data": [], "entities": []}
         return result
 
     q_arr = []
