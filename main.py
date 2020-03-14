@@ -24,7 +24,7 @@ def get_gini():
     if properties is None or properties == "[]" or len(properties) == 0:
         result = resolve_unbounded(entity)
     else:
-        result = resolve_bounded(entity)
+        result = resolve_bounded(entity, properties)
 
     return json.dumps(result)
 
