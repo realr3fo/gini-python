@@ -37,7 +37,7 @@ def get_instances_of(entity):
 
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
-    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 1000""" % entity
+    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 500""" % entity
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
