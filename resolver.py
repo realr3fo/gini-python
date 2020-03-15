@@ -4,31 +4,68 @@ from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative
     calculate_gini_bounded, get_cumulative_data_and_entities_bounded
 from wikidata import get_results
 
+ENDPOINT_URL = "https://query.wikidata.org/sparql"
+
+
+def get_instances_of(entity):
+    entity_link, entity_id, entity_label, entity_desc = "", "", "", ""
+    query = """SELECT ?entity ?entityLabel ?description {
+      BIND(wd:%s AS ?entity)
+      ?entity schema:description ?description.
+      FILTER ( lang(?description) = "en" )
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }""" % entity
+    query_results = get_results(ENDPOINT_URL, query)
+    result_arr = query_results["results"]["bindings"]
+    if len(result_arr) == 0:
+        result = {
+            "instancesOf": {"entityLink": entity_link, "entityID": entity_id, "entityLabel": entity_label,
+                            "entityDescription": entity_desc},
+            "gini": 0, "data": [], "entities": []}
+        return result
+    for elem in result_arr:
+        entity_link = elem["entity"]["value"]
+        entity_id = entity_link.split("/")[-1]
+        entity_label = elem["entityLabel"]["value"]
+        entity_desc = elem["description"]["value"]
+
+    instance_of_data = {"entityLink": entity_link, "entityID": entity_id, "entityLabel": entity_label,
+                        "entityDescription": entity_desc}
+
+    return instance_of_data
+
 
 def resolve_unbounded(entity):
-    endpoint_url = "https://query.wikidata.org/sparql"
-
-    query = """SELECT distinct ?item ?itemLabel (SAMPLE(?image) AS ?image){?item wdt:P31 wd:%s. OPTIONAL { ?item wdt:P18 
-        ?image}FILTER(STRSTARTS(STR(wdt:P18),"http://www.wikidata.org/prop/direct/"))SERVICE wikibase:label { 
-        bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }} GROUP BY ?item ?itemLabel""" % entity
-    query_results = get_results(endpoint_url, query)
+    instance_of_data = get_instances_of(entity)
+    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 1000""" % entity
+    query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
-        result = {"gini": 0, "data": [], "entities": []}
+        result = {
+            "instancesOf": {instance_of_data},
+            "gini": 0, "data": [], "entities": []}
         return result
 
     q_arr = []
     for elem in item_arr:
         item_value = elem["item"]["value"]
-        item_label = elem["itemLabel"]["value"]
-        item_image = None
-        if "image" in elem:
-            item_image = elem["image"]["value"]
         q_value = item_value.split("/")[-1]
-        query = """SELECT (COUNT(DISTINCT(?p)) AS ?propertyCount) {wd:%s ?p ?o .FILTER(STRSTARTS(STR(?p),
-            "http://www.wikidata.org/prop/direct/"))}""" % q_value
-        query_results = get_results(endpoint_url, query)
-        property_count = int(query_results["results"]["bindings"][0]["propertyCount"]["value"])
+        query = """
+        SELECT DISTINCT ?item ?itemLabel (SAMPLE(?image) as ?image) (COUNT(DISTINCT(?p)) AS ?propertyCount) {
+        BIND(wd:%s AS ?item)
+        ?item ?p ?o . 
+        OPTIONAL { ?item wdt:P18 ?image}
+        FILTER(STRSTARTS(STR(?p), "http://www.wikidata.org/prop/direct/"))
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+        } GROUP BY ?item ?itemLabel ?image LIMIT 1
+        """ % q_value
+        query_results = get_results(ENDPOINT_URL, query)
+        single_instance = query_results["results"]["bindings"][0]
+        property_count = int(single_instance["propertyCount"]["value"])
+        item_label = single_instance["itemLabel"]["value"]
+        item_image = None
+        if "image" in single_instance:
+            item_image = single_instance["image"]["value"]
         q_arr.append((q_value, property_count, item_label, item_image))
 
     q_arr = sorted(q_arr, key=lambda x: x[1])
@@ -38,7 +75,7 @@ def resolve_unbounded(entity):
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
 
-    result = {"gini": gini_coefficient, "data": data, "entities": entities}
+    result = {"instanceOf": instance_of_data, "gini": gini_coefficient, "data": data, "entities": entities}
     return result
 
 
@@ -58,7 +95,7 @@ def save_to_map(query_results, result_map):
 
 
 def resolve_bounded(entity, properties):
-    endpoint_url = "https://query.wikidata.org/sparql"
+    instance_of_data = get_instances_of(entity)
     properties = properties.split(",")
     combinations = []
     for i in range(1, len(properties) + 1):
@@ -71,7 +108,7 @@ def resolve_bounded(entity, properties):
     results_map = {}
     results_grouped_by_prop = []
     for comb in combinations:
-        query = """select distinct ?item ?itemLabel (SAMPLE(?image) AS ?image)"""
+        query = """select distinct ?item ?itemLabel (SAMPLE(?image) AS ?image) {{select DISTINCT ?item """
         for idx in range(len(comb)):
             prop_query = ""
             counter = 0
@@ -82,26 +119,26 @@ def resolve_bounded(entity, properties):
                 query += " UNION {?item wdt:P31 wd:%s; %s}" % (entity, prop_query)
             else:
                 query += """{{ ?item wdt:P31 wd:%s; %s}""" % (entity, prop_query)
-            # UNION
-        query += """ OPTIONAL {?item wdt:P18 ?image} SERVICE wikibase:label { bd:serviceParam wikibase:language 
+        query += """} LIMIT 1000
+  } OPTIONAL {?item wdt:P18 ?image} SERVICE wikibase:label { bd:serviceParam wikibase:language 
         "[AUTO_LANGUAGE],en". } } GROUP BY ?item ?itemLabel """
-        query_results = get_results(endpoint_url, query)
+        query_results = get_results(ENDPOINT_URL, query)
         results_group = save_to_map(query_results, results_map)
         results_grouped_by_prop.append((results_group, len(results_group)))
 
-    # send one more to wikidata for the rest of data that does not have all of those properties
-    query = """select distinct ?item ?itemLabel (SAMPLE(?image) AS ?image) {?item wdt:P31 wd:%s; 
-    OPTIONAL {?item wdt:P18 ?image} """ % entity
+    query = """select distinct ?item ?itemLabel (SAMPLE(?image) AS ?image) {
+  {
+    select DISTINCT ?item {
+    ?item wdt:P31 wd:%s.
+    } LIMIT 1000
+  } OPTIONAL {?item wdt:P18 ?image} """ % entity
     for prop in properties:
         query += "  FILTER NOT EXISTS {?item wdt:%s ?0} " % prop
     query += """  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
     GROUP BY ?item ?itemLabel """
-    query_results = get_results(endpoint_url, query)
+    query_results = get_results(ENDPOINT_URL, query)
     results_group = save_to_map(query_results, results_map)
     results_grouped_by_prop.append((results_group, len(results_group)))
-
-    for i in results_grouped_by_prop:
-        print(i)
 
     q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
 
@@ -110,5 +147,5 @@ def resolve_bounded(entity, properties):
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)
     data = normalize_data(cumulative_data)
 
-    result = {"gini": gini_coefficient, "data": data, "entities": entities}
+    result = {"instancesOf": instance_of_data, "gini": gini_coefficient, "data": data, "entities": entities}
     return result
