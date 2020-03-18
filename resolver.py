@@ -51,22 +51,18 @@ def resolve_unbounded(entity):
         item_value = elem["item"]["value"]
         q_value = item_value.split("/")[-1]
         query = """
-        SELECT DISTINCT ?item ?itemLabel (SAMPLE(?image) as ?image) (COUNT(DISTINCT(?p)) AS ?propertyCount) {
-        BIND(wd:%s AS ?item)
-        ?item ?p ?o . 
-        OPTIONAL { ?item wdt:P18 ?image}
-        FILTER(STRSTARTS(STR(?p), "http://www.wikidata.org/prop/direct/"))
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-        } GROUP BY ?item ?itemLabel ?image LIMIT 1
+        SELECT DISTINCT ?item ?itemLabel(COUNT(DISTINCT(?p)) AS ?propertyCount) {
+  BIND(wd:%s AS ?item)
+  ?item ?p ?o . 
+  FILTER(STRSTARTS(STR(?p), "http://www.wikidata.org/prop/direct/"))
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+} GROUP BY ?item ?itemLabel
         """ % q_value
         query_results = get_results(ENDPOINT_URL, query)
         single_instance = query_results["results"]["bindings"][0]
         property_count = int(single_instance["propertyCount"]["value"])
         item_label = single_instance["itemLabel"]["value"]
-        item_image = None
-        if "image" in single_instance:
-            item_image = single_instance["image"]["value"]
-        q_arr.append((q_value, property_count, item_label, item_image))
+        q_arr.append((q_value, property_count, item_label))
 
     q_arr = sorted(q_arr, key=lambda x: x[1])
 
