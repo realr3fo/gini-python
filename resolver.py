@@ -35,6 +35,13 @@ def get_instances_of(entity):
     return instance_of_data
 
 
+def get_each_amount(chunked_q_arr):
+    result = []
+    for arr in chunked_q_arr:
+        result.append(len(arr))
+    return result
+
+
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
     query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 300""" % entity
@@ -51,7 +58,7 @@ def resolve_unbounded(entity):
         item_value = elem["item"]["value"]
         q_value = item_value.split("/")[-1]
         query = """
-        SELECT DISTINCT ?item ?itemLabel(COUNT(DISTINCT(?p)) AS ?propertyCount) {
+        SELECT DISTINCT ?item ?itemLabel (COUNT(DISTINCT(?p)) AS ?propertyCount) {
   BIND(wd:%s AS ?item)
   ?item ?p ?o . 
   FILTER(STRSTARTS(STR(?p), "http://www.wikidata.org/prop/direct/"))
@@ -68,10 +75,12 @@ def resolve_unbounded(entity):
 
     gini_coefficient = calculate_gini(q_arr)
     chunked_q_arr = get_chunked_arr(q_arr)
+    each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
 
-    result = {"instanceOf": instance_of_data, "gini": gini_coefficient, "data": data, "entities": entities}
+    result = {"instanceOf": instance_of_data, "gini": gini_coefficient, "each_amount": each_amount, "data": data,
+              "entities": entities}
     return result
 
 
@@ -88,6 +97,13 @@ def save_to_map(query_results, result_map):
             result_map[item_q_id] = {"label": item_label, "image": item_image}
             results_group.append(item_q_id)
     return results_group
+
+
+def get_each_amount_bounded(chunked_q_arr):
+    result = []
+    for elem in chunked_q_arr:
+        result.append(elem[0][1])
+    return result
 
 
 def resolve_bounded(entity, properties):
@@ -135,14 +151,17 @@ def resolve_bounded(entity, properties):
     query_results = get_results(ENDPOINT_URL, query)
     results_group = save_to_map(query_results, results_map)
     results_grouped_by_prop.append((results_group, len(results_group)))
+    reversed_results_group = list(reversed(results_grouped_by_prop))
     print(results_grouped_by_prop)
-
-    q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
-
+    print(reversed_results_group)
+    # q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
+    q_arr = reversed_results_group
     gini_coefficient = calculate_gini_bounded(q_arr)
     chunked_q_arr = get_chunked_arr(q_arr)
+    each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)
     data = normalize_data(cumulative_data)
 
-    result = {"instancesOf": instance_of_data, "gini": gini_coefficient, "data": data, "entities": entities}
+    result = {"instancesOf": instance_of_data, "gini": abs(gini_coefficient), "each_amount": each_amount, "data": data,
+              "entities": entities}
     return result
