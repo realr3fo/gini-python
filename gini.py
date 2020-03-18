@@ -35,8 +35,12 @@ def normalize_data(cumulative_data):
 
 def calculate_gini_bounded(q_arr):
     n = len(q_arr)
+    # n = 4
     sum_entity = sum(n for _, n in q_arr)
+    # sum_entity = 19
+    # q_arr = [10,3,5,1]
     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
+    # calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i] for i in range(len(q_arr)))
     right_below_gini_coefficient = n * sum_entity
     right_top_gini_coefficient = 2 * calculate_top_sum
     right_gini_coefficient = float(right_top_gini_coefficient) / float(right_below_gini_coefficient)

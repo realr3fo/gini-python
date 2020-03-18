@@ -3,8 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gini.py" beforeDir="false" afterPath="$PROJECT_DIR$/gini.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +110,7 @@
       <workItem from="1584184761631" duration="440000" />
       <workItem from="1584267124687" duration="7208000" />
       <workItem from="1584430156352" duration="4422000" />
-      <workItem from="1584528290358" duration="4173000" />
+      <workItem from="1584528290358" duration="8785000" />
     </task>
     <servers />
   </component>
@@ -126,22 +126,22 @@
       <screen x="0" y="23" width="1280" height="711" />
     </state>
     <state x="363" y="188" key="#com.intellij.fileTypes.FileTypeChooser/0.23.1280.711@0.23.1280.711" timestamp="1584112428249" />
-    <state width="1238" height="309" key="GridCell.Tab.0.bottom" timestamp="1584536103565">
+    <state width="1238" height="218" key="GridCell.Tab.0.bottom" timestamp="1584543274457">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1238" height="309" key="GridCell.Tab.0.bottom/0.23.1280.711@0.23.1280.711" timestamp="1584536103565" />
-    <state width="1238" height="309" key="GridCell.Tab.0.center" timestamp="1584536103564">
+    <state width="1238" height="218" key="GridCell.Tab.0.bottom/0.23.1280.711@0.23.1280.711" timestamp="1584543274457" />
+    <state width="1238" height="218" key="GridCell.Tab.0.center" timestamp="1584543274456">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1238" height="309" key="GridCell.Tab.0.center/0.23.1280.711@0.23.1280.711" timestamp="1584536103564" />
-    <state width="1238" height="309" key="GridCell.Tab.0.left" timestamp="1584536103563">
+    <state width="1238" height="218" key="GridCell.Tab.0.center/0.23.1280.711@0.23.1280.711" timestamp="1584543274456" />
+    <state width="1238" height="218" key="GridCell.Tab.0.left" timestamp="1584543274455">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1238" height="309" key="GridCell.Tab.0.left/0.23.1280.711@0.23.1280.711" timestamp="1584536103563" />
-    <state width="1238" height="309" key="GridCell.Tab.0.right" timestamp="1584536103564">
+    <state width="1238" height="218" key="GridCell.Tab.0.left/0.23.1280.711@0.23.1280.711" timestamp="1584543274455" />
+    <state width="1238" height="218" key="GridCell.Tab.0.right" timestamp="1584543274457">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
-    <state width="1238" height="309" key="GridCell.Tab.0.right/0.23.1280.711@0.23.1280.711" timestamp="1584536103564" />
+    <state width="1238" height="218" key="GridCell.Tab.0.right/0.23.1280.711@0.23.1280.711" timestamp="1584543274457" />
     <state width="1218" height="203" key="GridCell.Tab.1.bottom" timestamp="1584119938873">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
@@ -164,7 +164,7 @@
     <state x="402" y="23" width="476" height="711" key="refactoring.ChangeSignatureDialog/0.23.1280.711@0.23.1280.711" timestamp="1584162142399" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/python_gini$main.coverage" NAME="main Coverage Results" MODIFIED="1584536103553" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/python_gini$main.coverage" NAME="main Coverage Results" MODIFIED="1584543274435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/python_gini$wikidata.coverage" NAME="wikidata Coverage Results" MODIFIED="1584113494506" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

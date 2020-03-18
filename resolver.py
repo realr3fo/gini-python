@@ -151,17 +151,14 @@ def resolve_bounded(entity, properties):
     query_results = get_results(ENDPOINT_URL, query)
     results_group = save_to_map(query_results, results_map)
     results_grouped_by_prop.append((results_group, len(results_group)))
-    reversed_results_group = list(reversed(results_grouped_by_prop))
-    print(results_grouped_by_prop)
-    print(reversed_results_group)
-    # q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
-    q_arr = reversed_results_group
+    q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
     gini_coefficient = calculate_gini_bounded(q_arr)
+    print(gini_coefficient)
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)
     data = normalize_data(cumulative_data)
 
-    result = {"instancesOf": instance_of_data, "gini": abs(gini_coefficient), "each_amount": each_amount, "data": data,
+    result = {"instancesOf": instance_of_data, "gini": gini_coefficient, "each_amount": each_amount, "data": data,
               "entities": entities}
     return result
