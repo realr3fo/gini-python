@@ -37,7 +37,7 @@ def get_instances_of(entity):
 
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
-    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 500""" % entity
+    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 300""" % entity
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
@@ -135,6 +135,7 @@ def resolve_bounded(entity, properties):
     query_results = get_results(ENDPOINT_URL, query)
     results_group = save_to_map(query_results, results_map)
     results_grouped_by_prop.append((results_group, len(results_group)))
+    print(results_grouped_by_prop)
 
     q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
 
