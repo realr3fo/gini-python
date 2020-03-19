@@ -5,7 +5,7 @@ from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 1000, "bounded": 300}
+LIMITS = {"unbounded": 300, "bounded": 1000}
 
 
 def get_instances_of(entity):
