@@ -102,7 +102,15 @@ def save_to_map(query_results, result_map):
 def get_each_amount_bounded(chunked_q_arr):
     result = []
     for elem in chunked_q_arr:
-        result.append(elem[0][1])
+        result.append(len(elem))
+    return result
+
+
+def get_q_arr_bounded(results_array):
+    result = []
+    for idx in range(len(results_array)):
+        for number in range(results_array[idx][1]):
+            result.append((results_array[idx][0][number], idx))
     return result
 
 
@@ -151,9 +159,10 @@ def resolve_bounded(entity, properties):
     query_results = get_results(ENDPOINT_URL, query)
     results_group = save_to_map(query_results, results_map)
     results_grouped_by_prop.append((results_group, len(results_group)))
-    q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
+    reversed_results_grouped_by_prop = list(reversed(results_grouped_by_prop))
+    # q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
+    q_arr = get_q_arr_bounded(reversed_results_grouped_by_prop)
     gini_coefficient = calculate_gini_bounded(q_arr)
-    print(gini_coefficient)
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)

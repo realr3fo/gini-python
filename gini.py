@@ -35,12 +35,8 @@ def normalize_data(cumulative_data):
 
 def calculate_gini_bounded(q_arr):
     n = len(q_arr)
-    # n = 4
     sum_entity = sum(n for _, n in q_arr)
-    # sum_entity = 19
-    # q_arr = [10,3,5,1]
     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
-    # calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i] for i in range(len(q_arr)))
     right_below_gini_coefficient = n * sum_entity
     right_top_gini_coefficient = 2 * calculate_top_sum
     right_gini_coefficient = float(right_top_gini_coefficient) / float(right_below_gini_coefficient)
@@ -74,10 +70,10 @@ def get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map):
     for elem in chunked_q_arr:
         for single_tuple in elem:
             cumulative += single_tuple[1]
-            for entity in single_tuple[0]:
-                entities.append({"entity": entity, "label": results_map[entity]["label"],
-                                 "image": results_map[entity]["image"], "percentile": chunk_counter + 1})
-            chunk_counter += 1
+            entity = single_tuple[0]
+            entities.append({"entity": entity, "label": results_map[entity]["label"],
+                             "image": results_map[entity]["image"], "percentile": chunk_counter + 1})
+        chunk_counter += 1
         cumulative_data.append(cumulative)
 
     return cumulative_data, entities
