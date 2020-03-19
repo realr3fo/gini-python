@@ -106,7 +106,7 @@ def resolve_unbounded(entity):
     return result
 
 
-def save_to_map(query_results, result_map):
+def save_to_map(query_results, result_map, property_count=0):
     arr_results = query_results["results"]["bindings"]
     results_group = []
     for elem in arr_results:
@@ -116,7 +116,7 @@ def save_to_map(query_results, result_map):
             item_image = None
             if "image" in elem:
                 item_image = elem["image"]["value"]
-            result_map[item_q_id] = {"label": item_label, "image": item_image}
+            result_map[item_q_id] = {"label": item_label, "image": item_image, "property_count": property_count}
             results_group.append(item_q_id)
     return results_group
 
@@ -165,7 +165,7 @@ def resolve_bounded(entity, properties):
   } OPTIONAL {?item wdt:P18 ?image} SERVICE wikibase:label { bd:serviceParam wikibase:language 
         "[AUTO_LANGUAGE],en". } } GROUP BY ?item ?itemLabel """ % LIMITS["bounded"]
         query_results = get_results(ENDPOINT_URL, query)
-        results_group = save_to_map(query_results, results_map)
+        results_group = save_to_map(query_results, results_map, len(comb[0]))
         results_grouped_by_prop.append((results_group, len(results_group)))
 
     query = """select distinct ?item ?itemLabel (SAMPLE(?image) AS ?image) {
@@ -179,11 +179,11 @@ def resolve_bounded(entity, properties):
     query += """  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
     GROUP BY ?item ?itemLabel """
     query_results = get_results(ENDPOINT_URL, query)
-    results_group = save_to_map(query_results, results_map)
+    results_group = save_to_map(query_results, results_map, 0)
     results_grouped_by_prop.append((results_group, len(results_group)))
     reversed_results_grouped_by_prop = list(reversed(results_grouped_by_prop))
-    # q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
     q_arr = get_q_arr_bounded(reversed_results_grouped_by_prop)
+
     gini_coefficient = calculate_gini_bounded(q_arr)
     gini_coefficient = round(gini_coefficient, 3)
     chunked_q_arr = get_chunked_arr(q_arr)

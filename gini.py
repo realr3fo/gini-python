@@ -72,7 +72,9 @@ def get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map):
             cumulative += single_tuple[1]
             entity = single_tuple[0]
             entities.append({"entity": entity, "label": results_map[entity]["label"],
-                             "image": results_map[entity]["image"], "percentile": chunk_counter + 1})
+                             "image": results_map[entity]["image"],
+                             "propertyCount": results_map[entity]["property_count"],
+                             "percentile": chunk_counter + 1})
         chunk_counter += 1
         cumulative_data.append(cumulative)
 
