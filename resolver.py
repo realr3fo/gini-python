@@ -5,6 +5,7 @@ from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
+LIMITS = {"unbounded": 1000, "bounded": 300}
 
 
 def get_instances_of(entity):
@@ -44,6 +45,16 @@ def get_each_amount(chunked_q_arr):
 
 def get_insight(gini_coefficient, data, chunked_q_arr):
     if gini_coefficient > 0.5:
+        max_idx = -1
+        max_diff = -1
+        for idx in range(len(data)):
+            if idx + 1 >= len(data):
+                break
+            curr_diff = data[idx + 1] - data[idx]
+            if curr_diff > max_diff:
+                max_diff = curr_diff
+                max_idx = idx
+
         result = "more than 0.5"
     else:
         result = "less than 0.5"
@@ -52,7 +63,7 @@ def get_insight(gini_coefficient, data, chunked_q_arr):
 
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
-    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 300""" % entity
+    query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT %d""" % (entity, LIMITS["unbounded"])
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
@@ -89,7 +100,8 @@ def resolve_unbounded(entity):
     data = normalize_data(cumulative_data)
     insight = get_insight(gini_coefficient, data, chunked_q_arr)
 
-    result = {"instanceOf": instance_of_data, "gini": gini_coefficient, "each_amount": each_amount, "data": data,
+    result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
+              "data": data,
               "insight": insight, "entities": entities}
     return result
 
@@ -149,9 +161,9 @@ def resolve_bounded(entity, properties):
                 query += " UNION {?item wdt:P31 wd:%s; %s}" % (entity, prop_query)
             else:
                 query += """{{ ?item wdt:P31 wd:%s; %s}""" % (entity, prop_query)
-        query += """} LIMIT 1000
+        query += """} LIMIT %d
   } OPTIONAL {?item wdt:P18 ?image} SERVICE wikibase:label { bd:serviceParam wikibase:language 
-        "[AUTO_LANGUAGE],en". } } GROUP BY ?item ?itemLabel """
+        "[AUTO_LANGUAGE],en". } } GROUP BY ?item ?itemLabel """ % LIMITS["bounded"]
         query_results = get_results(ENDPOINT_URL, query)
         results_group = save_to_map(query_results, results_map)
         results_grouped_by_prop.append((results_group, len(results_group)))
@@ -160,8 +172,8 @@ def resolve_bounded(entity, properties):
   {
     select DISTINCT ?item {
     ?item wdt:P31 wd:%s.
-    } LIMIT 1000
-  } OPTIONAL {?item wdt:P18 ?image} """ % entity
+    } LIMIT %d
+  } OPTIONAL {?item wdt:P18 ?image} """ % (entity, LIMITS["bounded"])
     for prop in properties:
         query += "  FILTER NOT EXISTS {?item wdt:%s ?0} " % prop
     query += """  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
@@ -180,6 +192,7 @@ def resolve_bounded(entity, properties):
     data = normalize_data(cumulative_data)
     insight = get_insight(gini_coefficient, data, chunked_q_arr)
 
-    result = {"instancesOf": instance_of_data, "insight": insight, "gini": gini_coefficient, "each_amount": each_amount,
+    result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
+              "gini": gini_coefficient, "each_amount": each_amount,
               "data": data, "entities": entities}
     return result
