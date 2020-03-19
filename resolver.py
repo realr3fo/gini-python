@@ -42,6 +42,14 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
+def get_insight(gini_coefficient, data, chunked_q_arr):
+    if gini_coefficient > 0.5:
+        result = "more than 0.5"
+    else:
+        result = "less than 0.5"
+    return result
+
+
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
     query = """SELECT DISTINCT ?item {  ?item wdt:P31 wd:%s} LIMIT 300""" % entity
@@ -74,13 +82,15 @@ def resolve_unbounded(entity):
     q_arr = sorted(q_arr, key=lambda x: x[1])
 
     gini_coefficient = calculate_gini(q_arr)
+    gini_coefficient = round(gini_coefficient, 3)
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
+    insight = get_insight(gini_coefficient, data, chunked_q_arr)
 
     result = {"instanceOf": instance_of_data, "gini": gini_coefficient, "each_amount": each_amount, "data": data,
-              "entities": entities}
+              "insight": insight, "entities": entities}
     return result
 
 
@@ -163,11 +173,13 @@ def resolve_bounded(entity, properties):
     # q_arr = sorted(results_grouped_by_prop, key=lambda x: x[1])
     q_arr = get_q_arr_bounded(reversed_results_grouped_by_prop)
     gini_coefficient = calculate_gini_bounded(q_arr)
+    gini_coefficient = round(gini_coefficient, 3)
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)
     data = normalize_data(cumulative_data)
+    insight = get_insight(gini_coefficient, data, chunked_q_arr)
 
-    result = {"instancesOf": instance_of_data, "gini": gini_coefficient, "each_amount": each_amount, "data": data,
-              "entities": entities}
+    result = {"instancesOf": instance_of_data, "insight": insight, "gini": gini_coefficient, "each_amount": each_amount,
+              "data": data, "entities": entities}
     return result
