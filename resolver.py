@@ -85,6 +85,10 @@ def resolve_unbounded(entity):
 
     gini_coefficient = calculate_gini(q_arr)
     gini_coefficient = round(gini_coefficient, 3)
+    if len(q_arr) >= LIMITS["unbounded"]:
+        exceed_limit = True
+    else:
+        exceed_limit = False
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
@@ -92,7 +96,7 @@ def resolve_unbounded(entity):
     insight = get_insight(data)
 
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data,
+              "data": data, "exceedLimit": exceed_limit,
               "insight": insight, "entities": entities}
     return result
 
@@ -174,7 +178,11 @@ def resolve_bounded(entity, properties):
     results_grouped_by_prop.append((results_group, len(results_group)))
     reversed_results_grouped_by_prop = list(reversed(results_grouped_by_prop))
     q_arr = get_q_arr_bounded(reversed_results_grouped_by_prop)
-
+    if len(q_arr) >= LIMITS["bounded"]:
+        exceed_limit = True
+    else:
+        exceed_limit = False
+    print(reversed_results_grouped_by_prop)
     gini_coefficient = calculate_gini_bounded(q_arr)
     gini_coefficient = round(gini_coefficient, 3)
     chunked_q_arr = get_chunked_arr(q_arr)
@@ -184,6 +192,6 @@ def resolve_bounded(entity, properties):
     insight = get_insight(data)
 
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
-              "gini": gini_coefficient, "each_amount": each_amount,
+              "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "data": data, "entities": entities}
     return result
