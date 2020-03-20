@@ -89,7 +89,7 @@ def resolve_unbounded(entity):
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(gini_coefficient, data)
+    insight = get_insight(data)
 
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data,
