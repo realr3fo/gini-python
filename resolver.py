@@ -1,7 +1,13 @@
 import itertools
+import time
 
 from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities, \
     calculate_gini_bounded, get_cumulative_data_and_entities_bounded
+
+
+from main import db
+
+from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
@@ -98,6 +104,7 @@ def resolve_unbounded(entity):
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data, "exceedLimit": exceed_limit,
               "insight": insight, "entities": entities}
+    save_logs_to_db({"entity": entity, "properties": ""})
     return result
 
 
@@ -131,9 +138,9 @@ def get_q_arr_bounded(results_array):
     return result
 
 
-def resolve_bounded(entity, properties):
+def resolve_bounded(entity, properties_request):
     instance_of_data = get_instances_of(entity)
-    properties = properties.split(",")
+    properties = properties_request.split(",")
     combinations = []
     for i in range(1, len(properties) + 1):
         comb_of_len = []
@@ -194,4 +201,21 @@ def resolve_bounded(entity, properties):
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "data": data, "entities": entities}
+    save_logs_to_db({"entity": entity, "properties": properties_request})
     return result
+
+
+def save_logs_to_db(data):
+    entity = data['entity']
+    properties = data['properties']
+    timestamp = str(time.time())
+    try:
+        logs = Logs(
+            entity=entity,
+            properties=properties,
+            timestamp=timestamp
+        )
+        db.session.add(logs)
+        db.session.commit()
+    except Exception as e:
+        return str(e)

@@ -1,14 +1,21 @@
 #!venv/bin/python3
 import http
 import json
+import os
+import time
 
 from flask import Flask, request, abort
 from flask_cors import CORS, cross_origin
-from resolver import resolve_unbounded, resolve_bounded
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+from resolver import resolve_unbounded, resolve_bounded
 
 
 @app.route('/', methods=['GET'])
