@@ -43,21 +43,12 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def get_insight(gini_coefficient, data, chunked_q_arr):
-    if gini_coefficient > 0.5:
-        max_idx = -1
-        max_diff = -1
-        for idx in range(len(data)):
-            if idx + 1 >= len(data):
-                break
-            curr_diff = data[idx + 1] - data[idx]
-            if curr_diff > max_diff:
-                max_diff = curr_diff
-                max_idx = idx
-
-        result = "more than 0.5"
-    else:
-        result = "less than 0.5"
+def get_insight(data):
+    percentile_eight_data = data[7]
+    gap_diff = 1.0 - percentile_eight_data
+    gap_percentage = gap_diff * 100
+    gap_rounded = round(gap_percentage)
+    result = "The top 20%% population of the class amounts to %d%% cumulative number of properties." % gap_rounded
     return result
 
 
@@ -98,7 +89,7 @@ def resolve_unbounded(entity):
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(gini_coefficient, data, chunked_q_arr)
+    insight = get_insight(gini_coefficient, data)
 
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data,
@@ -190,7 +181,7 @@ def resolve_bounded(entity, properties):
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities_bounded(chunked_q_arr, results_map)
     data = normalize_data(cumulative_data)
-    insight = get_insight(gini_coefficient, data, chunked_q_arr)
+    insight = get_insight(data)
 
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount,
