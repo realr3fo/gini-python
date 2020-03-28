@@ -55,7 +55,7 @@ def get_cumulative_data_and_entities(chunked_q_arr):
         for single_tuple in elem:
             cumulative += single_tuple[1]
             entities.append({"entity": single_tuple[0], "propertyCount": single_tuple[1],
-                             "label": single_tuple[2], "percentile": (chunk_counter + 1),
+                             "label": single_tuple[2], "percentile": str((chunk_counter + 1)*10) + "%",
                              "entityLink": single_tuple[3]})
         chunk_counter += 1
         cumulative_data.append(cumulative)
