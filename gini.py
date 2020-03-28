@@ -5,7 +5,7 @@ from utils import chunks
 
 def calculate_gini(q_arr):
     n = len(q_arr)
-    sum_prop = sum(n for _, n, _ in q_arr)
+    sum_prop = sum(n for _, n, _, _ in q_arr)
     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
     right_below_gini_coefficient = n * sum_prop
     right_top_gini_coefficient = 2 * calculate_top_sum
@@ -35,7 +35,7 @@ def normalize_data(cumulative_data):
 
 def calculate_gini_bounded(q_arr):
     n = len(q_arr)
-    sum_entity = sum(n for _, n in q_arr)
+    sum_entity = sum(n for _, n, _ in q_arr)
     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
     right_below_gini_coefficient = n * sum_entity
     right_top_gini_coefficient = 2 * calculate_top_sum
@@ -55,7 +55,8 @@ def get_cumulative_data_and_entities(chunked_q_arr):
         for single_tuple in elem:
             cumulative += single_tuple[1]
             entities.append({"entity": single_tuple[0], "propertyCount": single_tuple[1],
-                             "label": single_tuple[2], "percentile": (chunk_counter + 1)})
+                             "label": single_tuple[2], "percentile": (chunk_counter + 1),
+                             "entityLink": single_tuple[3]})
         chunk_counter += 1
         cumulative_data.append(cumulative)
     return cumulative_data, entities
