@@ -6,7 +6,7 @@ from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 10000, "bounded": 10000}
+LIMITS = {"unbounded": 20, "bounded": 20}
 
 
 def get_instances_of(entity):
@@ -45,11 +45,41 @@ def get_each_amount(chunked_q_arr):
 
 
 def get_insight(data):
-    percentile_eight_data = data[7]
+    data_length = len(data) - 1
+    eight_percentile = round(0.8 * data_length)
+    percentile_eight_data = data[eight_percentile]
     gap_diff = 1.0 - percentile_eight_data
     gap_percentage = gap_diff * 100
     gap_rounded = round(gap_percentage)
     result = "The top 20%% population of the class amounts to %d%% cumulative number of properties." % gap_rounded
+    return result
+
+
+def get_ten_percentile(data):
+    result = []
+    n = len(data)
+    if n == 10:
+        return data
+    percentiles = []
+    for i in range(n):
+        percentile = 10 * ((i+1) - 0.5) / n
+        percentile = round(percentile)
+        percentiles.append((data[i], percentile))
+    current_percentile = 0
+    for percentile_obj in percentiles:
+        current_data = percentile_obj[0]
+        percentile = percentile_obj[1]
+        if percentile == 9:
+            result.append(0.0)
+            result.append(current_data)
+            break
+        if current_percentile + 1 == percentile:
+            result.append(current_data)
+            current_percentile += 1
+        else:
+            result.append(0.0)
+            result.append(current_data)
+
     return result
 
 
@@ -93,11 +123,14 @@ def resolve_unbounded(entity):
         exceed_limit = True
     else:
         exceed_limit = False
+
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
     insight = get_insight(data)
+    if len(data) < 10:
+        data = get_ten_percentile(data)
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data, "exceedLimit": exceed_limit,
               "insight": insight, "entities": entities}
@@ -115,6 +148,11 @@ def get_each_amount_bounded(chunked_q_arr):
 def resolve_bounded(entity, properties_request):
     instance_of_data = get_instances_of(entity)
     properties = properties_request.split(",")
+    new_properties = []
+    for elem in properties:
+        new_elem = elem.strip()
+        new_properties.append(new_elem)
+    properties = new_properties
 
     jml_join = " + ?".join(properties)
 
@@ -155,7 +193,8 @@ def resolve_bounded(entity, properties_request):
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
     insight = get_insight(data)
-
+    if len(data) < 10:
+        data = get_ten_percentile(data)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "data": data, "entities": entities}
