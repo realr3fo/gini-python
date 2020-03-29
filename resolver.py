@@ -6,7 +6,7 @@ from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 20, "bounded": 20}
+LIMITS = {"unbounded": 10000, "bounded": 10000}
 
 
 def get_instances_of(entity):
