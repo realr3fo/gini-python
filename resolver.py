@@ -46,6 +46,10 @@ def get_each_amount(chunked_q_arr):
 
 
 def get_differences_insight(chunked_q_arr):
+    data_length = len(chunked_q_arr)
+    top_percentile = round(0.8 * data_length)
+    bot_percentile = round(0.2 * data_length)
+    print(chunked_q_arr)
     return ""
 
 
@@ -64,8 +68,6 @@ def get_insight(data, chunked_q_arr):
 
 def get_ten_percentile(data):
     n = len(data)
-    if n == 10:
-        return data
     percentiles = []
     for i in range(n):
         percentile = 10 * ((i + 1) - 0.5) / n
