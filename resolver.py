@@ -8,7 +8,7 @@ from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap" : 10}
+LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap" : 50}
 
 
 def get_instances_of(entity):
@@ -55,8 +55,7 @@ def get_property_gap(chunked_q_arr):
     top_arr = []
     for i in range(top_percentile, data_length):
         for elem in chunked_q_arr[i]:
-            if len(top_arr) == 49:
-                top_arr.append(elem)
+            if len(top_arr) >= 50:
                 break
             top_arr.append(elem)
     top_query = "SELECT DISTINCT ?p ?pLabel { "
@@ -69,7 +68,6 @@ def get_property_gap(chunked_q_arr):
   ?p wikibase:directClaim ?property .
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
 } LIMIT %s""" % LIMITS["property_gap"]
-    # print(top_query)
     query_results = get_results(ENDPOINT_URL, top_query)
     top_prop_arr = query_results["results"]["bindings"]
     if len(top_prop_arr) == 0:
@@ -87,8 +85,7 @@ def get_property_gap(chunked_q_arr):
     bot_arr = []
     for i in range(0, bot_percentile):
         for elem in chunked_q_arr[i]:
-            if len(bot_arr) == 49:
-                bot_arr.append(elem)
+            if len(bot_arr) >= 50:
                 break
             bot_arr.append(elem)
     bot_query = "select distinct ?p ?pLabel { "
@@ -101,7 +98,6 @@ def get_property_gap(chunked_q_arr):
   ?p wikibase:directClaim ?property .
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }  
 } LIMIT %s""" % LIMITS["property_gap"]
-
     query_results = get_results(ENDPOINT_URL, bot_query)
     bot_prop_arr = query_results["results"]["bindings"]
     if len(bot_prop_arr) == 0:
