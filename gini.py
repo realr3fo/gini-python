@@ -24,6 +24,8 @@ def get_chunked_arr(q_arr):
 
 
 def normalize_data(cumulative_data):
+    if len(cumulative_data) == 1:
+        return [1]
     min_cum_data = min(cumulative_data)
     max_cum_data = max(cumulative_data)
     data = []

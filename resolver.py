@@ -1,4 +1,5 @@
 import math
+import random
 import time
 
 from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
@@ -45,11 +46,93 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def get_differences_insight(chunked_q_arr):
+def get_property_gap(chunked_q_arr):
     data_length = len(chunked_q_arr)
-    top_percentile = round(0.8 * data_length)
-    bot_percentile = round(0.2 * data_length)
-    return ""
+    if data_length <= 1:
+        return []
+    # print(chunked_q_arr)
+    top_percentile = math.floor(0.8 * data_length)
+    top_arr = []
+    for i in range(top_percentile, data_length):
+        for elem in chunked_q_arr[i]:
+            top_arr.append(elem)
+    if len(top_arr) > 50:
+        random_arr = random.sample(range(0, len(top_arr)), 50)
+        new_top_arr = []
+        for elem in random_arr:
+            new_top_arr.append(top_arr[elem])
+        top_arr = new_top_arr
+    top_query = "SELECT DISTINCT ?p ?pLabel { "
+    for i in range(len(top_arr)):
+        if i != 0:
+            top_query += "UNION "
+        top_query += "{wd:%s ?property ?o .} " % top_arr[i][0]
+    top_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+  FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
+  ?p wikibase:directClaim ?property .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
+}"""
+    # print(top_query)
+    query_results = get_results(ENDPOINT_URL, top_query)
+    top_prop_arr = query_results["results"]["bindings"]
+    if len(top_prop_arr) == 0:
+        return []
+    top_prop_set = {}
+    for elem in top_prop_arr:
+        prop_link = elem['p']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['pLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        top_prop_set[prop_id] = prop_obj
+
+    # print(top_prop_set)
+    bot_percentile = math.ceil(0.2 * data_length)
+    bot_arr = []
+    for i in range(0, bot_percentile):
+        for elem in chunked_q_arr[i]:
+            bot_arr.append(elem)
+    if len(bot_arr) > 50:
+        random_arr = random.sample(range(0, len(bot_arr)), 50)
+        new_bot_arr = []
+        for elem in random_arr:
+            new_bot_arr.append(bot_arr[elem])
+        bot_arr = new_bot_arr
+    bot_query = "select distinct ?p ?pLabel { "
+    for i in range(len(bot_arr)):
+        if i != 0:
+            bot_query += "UNION "
+        bot_query += "{wd:%s ?property ?o .} " % bot_arr[i][0]
+    bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+  FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
+  ?p wikibase:directClaim ?property .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
+}"""
+
+    query_results = get_results(ENDPOINT_URL, bot_query)
+    bot_prop_arr = query_results["results"]["bindings"]
+    if len(bot_prop_arr) == 0:
+        return []
+    bot_prop_set = {}
+    for elem in bot_prop_arr:
+        prop_link = elem['p']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['pLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        bot_prop_set[prop_id] = prop_obj
+
+    for elem in bot_prop_set:
+        if elem in top_prop_set:
+            del top_prop_set[elem]
+
+    result = []
+    for elem in top_prop_set:
+        prop_obj = top_prop_set[elem]
+        prop_id = prop_obj[0]
+        prop_label = prop_obj[1]
+        prop_link = prop_obj[2]
+        result.append({"property": prop_id, "propertyLabel" : prop_label, "propertyLink" : prop_link})
+
+    return result
 
 
 def get_insight(data, chunked_q_arr):
@@ -60,7 +143,6 @@ def get_insight(data, chunked_q_arr):
     gap_percentage = gap_diff * 100
     gap_rounded = round(gap_percentage)
 
-    differences = get_differences_insight(chunked_q_arr)
     result = "The top 20%% population of the class amounts to %d%% cumulative number of properties." % gap_rounded
     return result
 
@@ -123,8 +205,9 @@ def resolve_unbounded(entity):
     data = normalize_data(cumulative_data)
     insight = get_insight(data, chunked_q_arr)
     percentiles = get_ten_percentile(data)
+    property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "propertyGap": property_gap,
               "insight": insight, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": ""})
     return result
@@ -186,6 +269,7 @@ def resolve_bounded(entity, properties_request):
     data = normalize_data(cumulative_data)
     insight = get_insight(data, chunked_q_arr)
     percentiles = get_ten_percentile(data)
+    # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "percentileData": percentiles,
