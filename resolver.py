@@ -8,7 +8,7 @@ from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 10000, "bounded": 10000}
+LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap" : 100}
 
 
 def get_instances_of(entity):
@@ -67,8 +67,8 @@ def get_property_gap(chunked_q_arr):
     top_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
-}"""
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } LIMIT %s
+}""" % LIMITS["property_gap"]
     # print(top_query)
     query_results = get_results(ENDPOINT_URL, top_query)
     top_prop_arr = query_results["results"]["bindings"]
@@ -99,8 +99,8 @@ def get_property_gap(chunked_q_arr):
     bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
-}"""
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } LIMIT %s 
+}""" % LIMITS["property_gap"]
 
     query_results = get_results(ENDPOINT_URL, bot_query)
     bot_prop_arr = query_results["results"]["bindings"]
