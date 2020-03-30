@@ -55,7 +55,7 @@ def get_property_gap(chunked_q_arr):
     top_arr = []
     for i in range(top_percentile, data_length):
         for elem in chunked_q_arr[i]:
-            if len(top_arr) >= 50:
+            if len(top_arr) >= 25:
                 break
             top_arr.append(elem)
     top_query = "SELECT DISTINCT ?p ?pLabel { "
@@ -85,7 +85,7 @@ def get_property_gap(chunked_q_arr):
     bot_arr = []
     for i in range(0, bot_percentile):
         for elem in chunked_q_arr[i]:
-            if len(bot_arr) >= 50:
+            if len(bot_arr) >= 25:
                 break
             bot_arr.append(elem)
     bot_query = "select distinct ?p ?pLabel { "
