@@ -1,3 +1,4 @@
+import math
 import time
 
 from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
@@ -44,43 +45,33 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def get_insight(data):
+def get_differences_insight(chunked_q_arr):
+    return ""
+
+
+def get_insight(data, chunked_q_arr):
     data_length = len(data) - 1
     eight_percentile = round(0.8 * data_length)
     percentile_eight_data = data[eight_percentile]
     gap_diff = 1.0 - percentile_eight_data
     gap_percentage = gap_diff * 100
     gap_rounded = round(gap_percentage)
+
+    differences = get_differences_insight(chunked_q_arr)
     result = "The top 20%% population of the class amounts to %d%% cumulative number of properties." % gap_rounded
     return result
 
 
 def get_ten_percentile(data):
-    result = []
     n = len(data)
     if n == 10:
         return data
     percentiles = []
     for i in range(n):
-        percentile = 10 * ((i+1) - 0.5) / n
-        percentile = round(percentile)
-        percentiles.append((data[i], percentile))
-    current_percentile = 0
-    for percentile_obj in percentiles:
-        current_data = percentile_obj[0]
-        percentile = percentile_obj[1]
-        if percentile == 9:
-            result.append(0.0)
-            result.append(current_data)
-            break
-        if current_percentile + 1 == percentile:
-            result.append(current_data)
-            current_percentile += 1
-        else:
-            result.append(0.0)
-            result.append(current_data)
-
-    return result
+        percentile = 10 * ((i + 1) - 0.5) / n
+        percentile = math.ceil(percentile)
+        percentiles.append(str(percentile * 10) + "%")
+    return percentiles
 
 
 def resolve_unbounded(entity):
@@ -128,11 +119,10 @@ def resolve_unbounded(entity):
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data)
-    if len(data) < 10:
-        data = get_ten_percentile(data)
+    insight = get_insight(data, chunked_q_arr)
+    percentiles = get_ten_percentile(data)
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": ""})
     return result
@@ -192,11 +182,11 @@ def resolve_bounded(entity, properties_request):
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data)
-    if len(data) < 10:
-        data = get_ten_percentile(data)
+    insight = get_insight(data, chunked_q_arr)
+    percentiles = get_ten_percentile(data)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
+              "percentileData": percentiles,
               "data": data, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": properties_request})
 
