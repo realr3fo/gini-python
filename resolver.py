@@ -49,7 +49,6 @@ def get_differences_insight(chunked_q_arr):
     data_length = len(chunked_q_arr)
     top_percentile = round(0.8 * data_length)
     bot_percentile = round(0.2 * data_length)
-    print(chunked_q_arr)
     return ""
 
 
@@ -80,12 +79,13 @@ def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
     query = """
     SELECT ?item ?itemLabel ?cnt {
-        {SELECT ?item (COUNT(DISTINCT(?p)) AS ?cnt) {
+        {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
         
         {SELECT DISTINCT ?item WHERE {
            ?item wdt:P31 wd:%s .
         } LIMIT %d}
-        OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) }
+        OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+        ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
                 
         } GROUP BY ?item}
         
