@@ -49,11 +49,66 @@ def get_each_amount(chunked_q_arr):
 def resolve_property_gap(entities):
     sample_entity_obj = entities[0]
     chunked_entities = get_chunked_arr(entities)
-    if "properties" in sample_entity_obj:
-        pass
-        # return resolve_bounded_property_gap(chunked_entities)
+    if "entityProperties" in sample_entity_obj:
+        return get_bounded_property_gap(chunked_entities)
     else:
         return get_unbounded_property_gap(chunked_entities)
+
+
+def get_bounded_property_gap(chunked_q_arr):
+    data_length = len(chunked_q_arr)
+    if data_length <= 1:
+        return []
+    top_percentile = math.floor(0.8 * data_length)
+    top_arr = []
+    for i in range(top_percentile, data_length):
+        for elem in chunked_q_arr[i]:
+            if len(top_arr) >= 50:
+                break
+            top_arr.append(elem)
+    top_prop_set = set()
+    for elem in top_arr:
+        elem_properties = elem["entityProperties"]
+        for prop in elem_properties:
+            top_prop_set.add(prop)
+    bot_percentile = math.ceil(0.2 * data_length)
+    bot_arr = []
+    for i in range(0, bot_percentile):
+        for elem in chunked_q_arr[i]:
+            if len(bot_arr) >= 50:
+                break
+            bot_arr.append(elem)
+    for elem in bot_arr:
+        elem_properties = elem["entityProperties"]
+        for prop in elem_properties:
+            if prop in top_prop_set:
+                top_prop_set.remove(prop)
+
+    prop_query = "SELECT "
+    for elem in top_prop_set:
+        prop_query += "?%s ?%sLabel " % (elem, elem)
+    prop_query += "{ "
+    for elem in top_prop_set:
+        prop_query += "?%s wikibase:directClaim wdt:%s . " % (elem, elem)
+    prop_query += """SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
+    print(prop_query)
+
+    prop_query_result = get_results(ENDPOINT_URL, prop_query)
+    prop_result_arr = prop_query_result["results"]["bindings"]
+
+    prop_objects = []
+    result = {"propertyGap": prop_objects}
+    if len(prop_result_arr) == 0:
+        return result
+    single_result = prop_result_arr[0]
+    for top_prop in top_prop_set:
+        prop_link = single_result[top_prop]["value"]
+        prop_id = top_prop
+        prop_label = single_result[top_prop + "Label"]["value"]
+        prop_obj = {"property": prop_id, "propertyLabel": prop_label, "propertyLink": prop_link}
+        prop_objects.append(prop_obj)
+
+    return result
 
 
 def get_unbounded_property_gap(chunked_q_arr):
@@ -64,7 +119,7 @@ def get_unbounded_property_gap(chunked_q_arr):
     top_arr = []
     for i in range(top_percentile, data_length):
         for elem in chunked_q_arr[i]:
-            if len(top_arr) >= 25:
+            if len(top_arr) >= 50:
                 break
             top_arr.append(elem)
     top_query = "SELECT DISTINCT ?p ?pLabel { "
@@ -89,12 +144,11 @@ def get_unbounded_property_gap(chunked_q_arr):
         prop_obj = (prop_id, prop_label, prop_link)
         top_prop_set[prop_id] = prop_obj
 
-    # print(top_prop_set)
     bot_percentile = math.ceil(0.2 * data_length)
     bot_arr = []
     for i in range(0, bot_percentile):
         for elem in chunked_q_arr[i]:
-            if len(bot_arr) >= 25:
+            if len(bot_arr) >= 50:
                 break
             bot_arr.append(elem)
     bot_query = "select distinct ?p ?pLabel { "
@@ -134,7 +188,7 @@ def get_unbounded_property_gap(chunked_q_arr):
     return result
 
 
-def get_insight(data, chunked_q_arr):
+def get_insight(data):
     data_length = len(data) - 1
     eight_percentile = round(0.8 * data_length)
     percentile_eight_data = data[eight_percentile]
@@ -202,9 +256,8 @@ def resolve_unbounded(entity):
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data, chunked_q_arr)
+    insight = get_insight(data)
     percentiles = get_ten_percentile(data)
-    # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}
@@ -250,8 +303,12 @@ def resolve_bounded(entity, properties_request):
         item_link = elem["item"]["value"]
         item_id = item_link.split("/")[-1]
         property_count = int(elem["count"]["value"])
+        entity_props = []
+        for prop in properties:
+            if elem[prop]["value"] == "1":
+                entity_props.append(prop)
         item_label = elem["itemLabel"]["value"]
-        entity_obj = (item_id, property_count, item_label, item_link)
+        entity_obj = (item_id, property_count, item_label, item_link, entity_props)
         q_arr.append(entity_obj)
     q_arr = sorted(q_arr, key=lambda x: x[1])
 
@@ -266,7 +323,7 @@ def resolve_bounded(entity, properties_request):
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data, chunked_q_arr)
+    insight = get_insight(data)
     percentiles = get_ten_percentile(data)
     # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,

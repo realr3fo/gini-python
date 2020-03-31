@@ -5,7 +5,7 @@ from utils import chunks
 
 def calculate_gini(q_arr):
     n = len(q_arr)
-    sum_prop = sum(n for _, n, _, _ in q_arr)
+    sum_prop = sum(elem[1] for elem in q_arr)
     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
     right_below_gini_coefficient = n * sum_prop
     right_top_gini_coefficient = 2 * calculate_top_sum
@@ -51,10 +51,13 @@ def get_cumulative_data_and_entities(chunked_q_arr):
                 percentile = str(10 * percentile)
             else:
                 percentile = str(counter * 10)
-            entities.append({"entity": single_tuple[0], "propertyCount": single_tuple[1],
-                             "label": single_tuple[2],
-                             "percentile": percentile + "%",
-                             "entityLink": single_tuple[3]})
+            entity_obj = {"entity": single_tuple[0], "propertyCount": single_tuple[1],
+                          "label": single_tuple[2],
+                          "percentile": percentile + "%",
+                          "entityLink": single_tuple[3]}
+            if len(single_tuple) == 5:
+                entity_obj["entityProperties"] = single_tuple[4]
+            entities.append(entity_obj)
 
         percentile_counter += 1
         counter += 1
