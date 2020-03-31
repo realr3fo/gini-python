@@ -15,7 +15,7 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-from resolver import resolve_unbounded, resolve_bounded
+from resolver import resolve_unbounded, resolve_bounded, resolve_property_gap
 
 
 @app.route('/', methods=['GET'])
@@ -38,6 +38,19 @@ def get_gini():
         result = resolve_bounded(entity, properties)
 
     return json.dumps(result)
+
+
+@app.route('/api/property/gap', methods=['POST'])
+@cross_origin()
+def get_property_gap():
+    entities = request.json
+    if "entities" not in entities:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
+    entities = entities["entities"]
+    if len(entities) == 0:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
+    result = resolve_property_gap(entities)
+    return result
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from models import Logs
 from wikidata import get_results
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
-LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap" : 10}
+LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap": 100}
 
 
 def get_instances_of(entity):
@@ -46,11 +46,20 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def get_property_gap(chunked_q_arr):
+def resolve_property_gap(entities):
+    sample_entity_obj = entities[0]
+    chunked_entities = get_chunked_arr(entities)
+    if "properties" in sample_entity_obj:
+        pass
+        # return resolve_bounded_property_gap(chunked_entities)
+    else:
+        return get_unbounded_property_gap(chunked_entities)
+
+
+def get_unbounded_property_gap(chunked_q_arr):
     data_length = len(chunked_q_arr)
     if data_length <= 1:
         return []
-    # print(chunked_q_arr)
     top_percentile = math.floor(0.8 * data_length)
     top_arr = []
     for i in range(top_percentile, data_length):
@@ -62,7 +71,7 @@ def get_property_gap(chunked_q_arr):
     for i in range(len(top_arr)):
         if i != 0:
             top_query += "UNION "
-        top_query += "{wd:%s ?property ?o .} " % top_arr[i][0]
+        top_query += "{wd:%s ?property ?o .} " % top_arr[i]["entity"]
     top_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
@@ -92,7 +101,7 @@ def get_property_gap(chunked_q_arr):
     for i in range(len(bot_arr)):
         if i != 0:
             bot_query += "UNION "
-        bot_query += "{wd:%s ?property ?o .} " % bot_arr[i][0]
+        bot_query += "{wd:%s ?property ?o .} " % bot_arr[i]["entity"]
     bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
@@ -120,8 +129,8 @@ def get_property_gap(chunked_q_arr):
         prop_id = prop_obj[0]
         prop_label = prop_obj[1]
         prop_link = prop_obj[2]
-        result.append({"property": prop_id, "propertyLabel" : prop_label, "propertyLink" : prop_link})
-
+        result.append({"property": prop_id, "propertyLabel": prop_label, "propertyLink": prop_link})
+    result = {"propertyGap": result}
     return result
 
 
@@ -195,9 +204,9 @@ def resolve_unbounded(entity):
     data = normalize_data(cumulative_data)
     insight = get_insight(data, chunked_q_arr)
     percentiles = get_ten_percentile(data)
-    property_gap = get_property_gap(chunked_q_arr)
+    # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "propertyGap": property_gap,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": ""})
     return result
