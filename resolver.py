@@ -46,39 +46,172 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
+def resolve_property_gap_union_top_union_bot(entities):
+    return resolve_property_gap(entities)
+
+
+def resolve_property_gap_intersection_top_intersection_bot(entities):
+    top_entities = []
+    bottom_entities = []
+    for elem in entities:
+        if elem["percentile"] == "10%" or elem["percentile"] == "20%":
+            bottom_entities.append(elem)
+        elif elem["percentile"] == "100%" or elem["percentile"] == "90%":
+            top_entities.append(elem)
+    top_query = "SELECT DISTINCT ?prop ?propLabel { "
+    counter = 0
+    for elem in top_entities:
+        if counter >= 6:
+            break
+        top_query += "wd:%s ?property []. " % elem["entity"]
+        counter += 1
+    top_query += """  FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+  FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .}
+  ?prop wikibase:directClaim ?property .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
+}
+"""
+    query_results = get_results(ENDPOINT_URL, top_query)
+    result_prop_arr = query_results["results"]["bindings"]
+    top_prop_set = {}
+    for elem in result_prop_arr:
+        prop_link = elem['prop']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['propLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        top_prop_set[prop_id] = prop_obj
+
+    bot_query = "SELECT DISTINCT ?prop ?propLabel { "
+    counter = 0
+    for elem in bottom_entities:
+        if counter >= 6:
+            break
+        bot_query += "wd:%s ?property []. " % elem["entity"]
+        counter += 1
+    bot_query += """  FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+      FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .}
+      ?prop wikibase:directClaim ?property .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
+    }
+    """
+    query_results = get_results(ENDPOINT_URL, top_query)
+    result_prop_arr = query_results["results"]["bindings"]
+    bot_prop_set = {}
+    for elem in result_prop_arr:
+        prop_link = elem['prop']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['propLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        bot_prop_set[prop_id] = prop_obj
+
+    for elem in top_prop_set:
+        if elem not in bot_prop_set:
+            del top_prop_set[elem]
+
+    result = []
+    for elem in top_prop_set:
+        prop_obj = top_prop_set[elem]
+        prop_id = prop_obj[0]
+        prop_label = prop_obj[1]
+        prop_link = prop_obj[2]
+        result.append({"property": prop_id, "propertyLabel": prop_label, "propertyLink": prop_link})
+    result = {"len": len(result), "propertyGap": result}
+    return result
+
+
+
+def resolve_property_gap_intersection_top_union_bot(entities):
+    top_entities = []
+    bottom_entities = []
+    for elem in entities:
+        if elem["percentile"] == "10%" or elem["percentile"] == "20%":
+            bottom_entities.append(elem)
+        elif elem["percentile"] == "100%" or elem["percentile"] == "90%":
+            top_entities.append(elem)
+    top_query = "SELECT DISTINCT ?prop ?propLabel { "
+    counter = 0
+    for elem in top_entities:
+        if counter >= 6:
+            break
+        top_query += "wd:%s ?property []. " % elem["entity"]
+        counter += 1
+    top_query += """  FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+      FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .}
+      ?prop wikibase:directClaim ?property .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
+    }
+    """
+    query_results = get_results(ENDPOINT_URL, top_query)
+    result_prop_arr = query_results["results"]["bindings"]
+    top_prop_set = {}
+    for elem in result_prop_arr:
+        prop_link = elem['prop']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['propLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        top_prop_set[prop_id] = prop_obj
+
+    bot_query = "select distinct ?p ?pLabel { "
+    for i in range(len(bottom_entities)):
+        if i != 0:
+            bot_query += "UNION "
+        bot_query += "{wd:%s ?property ?o .} " % bottom_entities[i]["entity"]
+    bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+      FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
+      ?p wikibase:directClaim ?property .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }  
+    } LIMIT %s""" % LIMITS["property_gap"]
+    query_results = get_results(ENDPOINT_URL, top_query)
+    result_prop_arr = query_results["results"]["bindings"]
+    bot_prop_set = {}
+    for elem in result_prop_arr:
+        prop_link = elem['prop']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem['propLabel']["value"]
+        prop_obj = (prop_id, prop_label, prop_link)
+        bot_prop_set[prop_id] = prop_obj
+
+    for elem in top_prop_set:
+        if elem not in bot_prop_set:
+            del top_prop_set[elem]
+
+    result = []
+    for elem in top_prop_set:
+        prop_obj = top_prop_set[elem]
+        prop_id = prop_obj[0]
+        prop_label = prop_obj[1]
+        prop_link = prop_obj[2]
+        result.append({"property": prop_id, "propertyLabel": prop_label, "propertyLink": prop_link})
+    result = {"len": len(result), "propertyGap": result}
+    return result
+
+
 def resolve_property_gap(entities):
     sample_entity_obj = entities[0]
-    chunked_entities = get_chunked_arr(entities)
     if "entityProperties" in sample_entity_obj:
-        return get_bounded_property_gap(chunked_entities)
+        return get_bounded_property_gap(entities)
     else:
-        return get_unbounded_property_gap(chunked_entities)
+        return get_unbounded_property_gap(entities)
 
 
-def get_bounded_property_gap(chunked_q_arr):
-    data_length = len(chunked_q_arr)
-    if data_length <= 1:
-        return []
-    top_percentile = math.floor(0.8 * data_length)
-    top_arr = []
-    for i in range(top_percentile, data_length):
-        for elem in chunked_q_arr[i]:
-            if len(top_arr) >= 50:
-                break
-            top_arr.append(elem)
+def get_bounded_property_gap(entities):
+    top_entities = []
+    bottom_entities = []
+    for elem in entities:
+        if elem["percentile"] == "10%" or elem["percentile"] == "20%":
+            bottom_entities.append(elem)
+        elif elem["percentile"] == "100%" or elem["percentile"] == "90%":
+            top_entities.append(elem)
+    if len(top_entities) > 50:
+        top_entities = top_entities[:50]
+    if len(bottom_entities) > 50:
+        bottom_entities = bottom_entities[:50]
     top_prop_set = set()
-    for elem in top_arr:
+    for elem in top_entities:
         elem_properties = elem["entityProperties"]
         for prop in elem_properties:
             top_prop_set.add(prop)
-    bot_percentile = math.ceil(0.2 * data_length)
-    bot_arr = []
-    for i in range(0, bot_percentile):
-        for elem in chunked_q_arr[i]:
-            if len(bot_arr) >= 50:
-                break
-            bot_arr.append(elem)
-    for elem in bot_arr:
+    for elem in bottom_entities:
         elem_properties = elem["entityProperties"]
         for prop in elem_properties:
             if prop in top_prop_set:
@@ -91,7 +224,6 @@ def get_bounded_property_gap(chunked_q_arr):
     for elem in top_prop_set:
         prop_query += "?%s wikibase:directClaim wdt:%s . " % (elem, elem)
     prop_query += """SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
-    print(prop_query)
 
     prop_query_result = get_results(ENDPOINT_URL, prop_query)
     prop_result_arr = prop_query_result["results"]["bindings"]
@@ -111,22 +243,24 @@ def get_bounded_property_gap(chunked_q_arr):
     return result
 
 
-def get_unbounded_property_gap(chunked_q_arr):
-    data_length = len(chunked_q_arr)
-    if data_length <= 1:
-        return []
-    top_percentile = math.floor(0.8 * data_length)
-    top_arr = []
-    for i in range(top_percentile, data_length):
-        for elem in chunked_q_arr[i]:
-            if len(top_arr) >= 50:
-                break
-            top_arr.append(elem)
+def get_unbounded_property_gap(entities):
+    top_entities = []
+    bottom_entities = []
+    for elem in entities:
+        if elem["percentile"] == "10%" or elem["percentile"] == "20%":
+            bottom_entities.append(elem)
+        elif elem["percentile"] == "100%" or elem["percentile"] == "90%":
+            top_entities.append(elem)
+    if len(top_entities) > 50:
+        top_entities = top_entities[:50]
+    if len(bottom_entities) > 50:
+        bottom_entities = bottom_entities[:50]
+
     top_query = "SELECT DISTINCT ?p ?pLabel { "
-    for i in range(len(top_arr)):
+    for i in range(len(top_entities)):
         if i != 0:
             top_query += "UNION "
-        top_query += "{wd:%s ?property ?o .} " % top_arr[i]["entity"]
+        top_query += "{wd:%s ?property ?o .} " % top_entities[i]["entity"]
     top_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
@@ -144,18 +278,11 @@ def get_unbounded_property_gap(chunked_q_arr):
         prop_obj = (prop_id, prop_label, prop_link)
         top_prop_set[prop_id] = prop_obj
 
-    bot_percentile = math.ceil(0.2 * data_length)
-    bot_arr = []
-    for i in range(0, bot_percentile):
-        for elem in chunked_q_arr[i]:
-            if len(bot_arr) >= 50:
-                break
-            bot_arr.append(elem)
     bot_query = "select distinct ?p ?pLabel { "
-    for i in range(len(bot_arr)):
+    for i in range(len(bottom_entities)):
         if i != 0:
             bot_query += "UNION "
-        bot_query += "{wd:%s ?property ?o .} " % bot_arr[i]["entity"]
+        bot_query += "{wd:%s ?property ?o .} " % bottom_entities[i]["entity"]
     bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
   FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
   ?p wikibase:directClaim ?property .
@@ -184,7 +311,7 @@ def get_unbounded_property_gap(chunked_q_arr):
         prop_label = prop_obj[1]
         prop_link = prop_obj[2]
         result.append({"property": prop_id, "propertyLabel": prop_label, "propertyLink": prop_link})
-    result = {"propertyGap": result}
+    result = {"len": len(result), "propertyGap": result}
     return result
 
 
