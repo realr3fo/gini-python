@@ -94,7 +94,7 @@ def resolve_property_gap_intersection_top_intersection_bot(entities):
       SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } 
     }
     """
-    query_results = get_results(ENDPOINT_URL, top_query)
+    query_results = get_results(ENDPOINT_URL, bot_query)
     result_prop_arr = query_results["results"]["bindings"]
     bot_prop_set = {}
     for elem in result_prop_arr:
@@ -104,9 +104,10 @@ def resolve_property_gap_intersection_top_intersection_bot(entities):
         prop_obj = (prop_id, prop_label, prop_link)
         bot_prop_set[prop_id] = prop_obj
 
-    for elem in top_prop_set:
-        if elem not in bot_prop_set:
-            del top_prop_set[elem]
+    top_prop_keys = list(top_prop_set.keys())
+    for key in top_prop_keys:
+        if key in bot_prop_set:
+            del top_prop_set[key]
 
     result = []
     for elem in top_prop_set:
@@ -119,7 +120,6 @@ def resolve_property_gap_intersection_top_intersection_bot(entities):
     return result
 
 
-
 def resolve_property_gap_intersection_top_union_bot(entities):
     top_entities = []
     bottom_entities = []
@@ -130,6 +130,10 @@ def resolve_property_gap_intersection_top_union_bot(entities):
             top_entities.append(elem)
     top_query = "SELECT DISTINCT ?prop ?propLabel { "
     counter = 0
+    if len(top_entities) > 50:
+        top_entities = top_entities[:50]
+    if len(bottom_entities) > 50:
+        bottom_entities = bottom_entities[:50]
     for elem in top_entities:
         if counter >= 6:
             break
@@ -151,17 +155,18 @@ def resolve_property_gap_intersection_top_union_bot(entities):
         prop_obj = (prop_id, prop_label, prop_link)
         top_prop_set[prop_id] = prop_obj
 
-    bot_query = "select distinct ?p ?pLabel { "
+    bot_query = "select distinct ?prop ?propLabel { "
     for i in range(len(bottom_entities)):
         if i != 0:
             bot_query += "UNION "
         bot_query += "{wd:%s ?property ?o .} " % bottom_entities[i]["entity"]
     bot_query += """FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
-      FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
-      ?p wikibase:directClaim ?property .
+      FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .}
+      ?prop wikibase:directClaim ?property .
       SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }  
     } LIMIT %s""" % LIMITS["property_gap"]
-    query_results = get_results(ENDPOINT_URL, top_query)
+    print(bot_query)
+    query_results = get_results(ENDPOINT_URL, bot_query)
     result_prop_arr = query_results["results"]["bindings"]
     bot_prop_set = {}
     for elem in result_prop_arr:
@@ -171,9 +176,12 @@ def resolve_property_gap_intersection_top_union_bot(entities):
         prop_obj = (prop_id, prop_label, prop_link)
         bot_prop_set[prop_id] = prop_obj
 
-    for elem in top_prop_set:
-        if elem not in bot_prop_set:
-            del top_prop_set[elem]
+    top_prop_keys = list(top_prop_set.keys())
+    print(top_prop_keys)
+    print(bot_prop_set.keys())
+    for key in top_prop_keys:
+        if key in bot_prop_set:
+            del top_prop_set[key]
 
     result = []
     for elem in top_prop_set:

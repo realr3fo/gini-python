@@ -60,13 +60,19 @@ def get_property_gap():
 @app.route('/api/property/analysis', methods=['POST'])
 @cross_origin()
 def get_property_analysis():
+    analysis_type = request.args.get('type')
     entities = request.json
     if "entities" not in entities:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
     entities = entities["entities"]
     if len(entities) == 0:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
-    result = resolve_property_gap_intersection_top_union_bot(entities)
+    if analysis_type == "intersection top intersection bot":
+        result = resolve_property_gap_intersection_top_intersection_bot(entities)
+    elif analysis_type == "union top intersection bot":
+        result = resolve_property_gap_intersection_top_union_bot(entities)
+    else:
+        result = resolve_property_gap(entities)
     return result
 
 
