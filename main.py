@@ -19,7 +19,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 from resolver import resolve_unbounded, resolve_bounded, resolve_property_gap, \
-    resolve_property_gap_intersection_top_intersection_bot, resolve_property_gap_intersection_top_union_bot
+    resolve_property_gap_intersection_top_intersection_bot, resolve_property_gap_intersection_top_union_bot, \
+    resolve_gini_analysis, resolve_property_gap_union_top_union_bot
 
 
 @app.route('/', methods=['GET'])
@@ -72,7 +73,18 @@ def get_property_analysis():
     elif analysis_type == "union top intersection bot":
         result = resolve_property_gap_intersection_top_union_bot(entities)
     else:
-        result = resolve_property_gap(entities)
+        result = resolve_property_gap_union_top_union_bot(entities)
+    return result
+
+
+@app.route('/api/gini/analysis', methods=['GET'])
+@cross_origin()
+def gini_entities_analysis():
+    limit = request.args.get('limit')
+    if limit == "":
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include limit")
+    limit = int(limit)
+    result = resolve_gini_analysis(limit)
     return result
 
 

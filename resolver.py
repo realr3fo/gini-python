@@ -22,11 +22,9 @@ def get_instances_of(entity):
     query_results = get_results(ENDPOINT_URL, query)
     result_arr = query_results["results"]["bindings"]
     if len(result_arr) == 0:
-        result = {
-            "instancesOf": {"entityLink": entity_link, "entityID": entity_id, "entityLabel": entity_label,
-                            "entityDescription": entity_desc},
-            "gini": 0, "data": [], "entities": []}
-        return result
+        instance_of_data = {"entityLink": entity_link, "entityID": entity_id, "entityLabel": entity_label,
+                            "entityDescription": entity_desc}
+        return instance_of_data
     for elem in result_arr:
         entity_link = elem["entity"]["value"]
         entity_id = entity_link.split("/")[-1]
@@ -43,6 +41,30 @@ def get_each_amount(chunked_q_arr):
     result = []
     for arr in chunked_q_arr:
         result.append(len(arr))
+    return result
+
+
+# noinspection PyTypeChecker
+def resolve_gini_analysis(limit):
+    result_arr = []
+    query_all_entities = "SELECT DISTINCT ?entity WHERE { ?s wdt:P31 ?entity . } LIMIT %d" % limit
+    query_all_entities_result = get_results(ENDPOINT_URL, query_all_entities)
+    all_entities_arr = query_all_entities_result["results"]["bindings"]
+    counter = 0
+    for elem in all_entities_arr:
+        entity_link = elem["entity"]["value"]
+        entity_id = entity_link.split("/")[-1]
+        unbounded_result = resolve_unbounded(entity_id)
+        entity_label = unbounded_result["instanceOf"]["entityLabel"]
+        gini_coefficient = unbounded_result["gini"]
+        amount = unbounded_result["amount"]
+        entity_obj = {"entityID": entity_id, "entityLabel": entity_label, "gini_coefficient": gini_coefficient,
+                      "entity_amount": amount}
+        counter += 1
+        print(counter)
+        print(entity_obj)
+        result_arr.append(entity_obj)
+    result = {"len": len(result_arr), "data": result_arr}
     return result
 
 
@@ -165,7 +187,6 @@ def resolve_property_gap_intersection_top_union_bot(entities):
       ?prop wikibase:directClaim ?property .
       SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }  
     } LIMIT %s""" % LIMITS["property_gap"]
-    print(bot_query)
     query_results = get_results(ENDPOINT_URL, bot_query)
     result_prop_arr = query_results["results"]["bindings"]
     bot_prop_set = {}
@@ -177,8 +198,6 @@ def resolve_property_gap_intersection_top_union_bot(entities):
         bot_prop_set[prop_id] = prop_obj
 
     top_prop_keys = list(top_prop_set.keys())
-    print(top_prop_keys)
-    print(bot_prop_set.keys())
     for key in top_prop_keys:
         if key in bot_prop_set:
             del top_prop_set[key]
@@ -345,6 +364,13 @@ def get_ten_percentile(data):
     return percentiles
 
 
+def get_each_amount_bounded(chunked_q_arr):
+    result = []
+    for elem in chunked_q_arr:
+        result.append(len(elem))
+    return result
+
+
 def resolve_unbounded(entity):
     instance_of_data = get_instances_of(entity)
     query = """
@@ -367,7 +393,7 @@ def resolve_unbounded(entity):
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
         result = {
-            "instancesOf": {instance_of_data},
+            "instanceOf": {instance_of_data},
             "gini": 0, "data": [], "entities": []}
         return result
     q_arr = []
@@ -390,20 +416,15 @@ def resolve_unbounded(entity):
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
     insight = get_insight(data)
     percentiles = get_ten_percentile(data)
+    percentiles.insert(0, '0%')
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "amount": sum(each_amount),
               "insight": insight, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": ""})
-    return result
-
-
-def get_each_amount_bounded(chunked_q_arr):
-    result = []
-    for elem in chunked_q_arr:
-        result.append(len(elem))
     return result
 
 
@@ -457,9 +478,11 @@ def resolve_bounded(entity, properties_request):
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
     insight = get_insight(data)
     percentiles = get_ten_percentile(data)
+    percentiles.insert(0, '0%')
     # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
