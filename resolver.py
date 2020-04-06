@@ -416,10 +416,11 @@ def resolve_unbounded(entity):
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data)
-    percentiles = get_ten_percentile(data)
+    insight = get_insight(original_data)
+    percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
     result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "amount": sum(each_amount),
@@ -478,10 +479,11 @@ def resolve_bounded(entity, properties_request):
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = get_each_amount_bounded(chunked_q_arr)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
-    insight = get_insight(data)
-    percentiles = get_ten_percentile(data)
+    insight = get_insight(original_data)
+    percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
     # property_gap = get_property_gap(chunked_q_arr)
     result = {"instanceOf": instance_of_data, "insight": insight, "limit": LIMITS,
