@@ -2,9 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/refoilmiya.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/refoilmiya.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gini.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/gini.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver/resolver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wikidata.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/wikidata.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,6 +43,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/resolver" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -45,6 +52,18 @@
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resolver" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/resolver" />
+      <recent name="$PROJECT_DIR$/config" />
+      <recent name="$PROJECT_DIR$/utils" />
+      <recent name="$PROJECT_DIR$/models" />
+    </key>
   </component>
   <component name="RunManager" selected="Python.printkLength">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -104,7 +123,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/wikidata.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/wikidata.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -154,7 +173,7 @@
       <workItem from="1585973830864" duration="16000" />
       <workItem from="1586093296959" duration="1717000" />
       <workItem from="1586170213202" duration="1322000" />
-      <workItem from="1587022831090" duration="5011000" />
+      <workItem from="1587022831090" duration="7590000" />
     </task>
     <servers />
   </component>
@@ -210,6 +229,10 @@
       <screen x="0" y="23" width="1280" height="720" />
     </state>
     <state x="302" y="23" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.23.1280.720@0.23.1280.720" timestamp="1585488586216" />
+    <state x="298" y="140" width="683" height="486" key="find.popup" timestamp="1587125611641">
+      <screen x="0" y="23" width="1280" height="720" />
+    </state>
+    <state x="298" y="140" width="683" height="486" key="find.popup/0.23.1280.720@0.23.1280.720" timestamp="1587125611641" />
     <state x="515" y="242" width="250" height="278" key="jetbrains.javascript.buildTools.run-task-popup" timestamp="1584591641385">
       <screen x="0" y="23" width="1280" height="711" />
     </state>

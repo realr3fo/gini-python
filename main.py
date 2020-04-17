@@ -2,7 +2,6 @@
 import http
 import json
 import os
-import time
 from dotenv import load_dotenv
 
 from flask import Flask, request, abort
@@ -18,10 +17,7 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-from resolver import resolve_unbounded, resolve_bounded, resolve_property_gap, \
-    resolve_property_gap_intersection_top_intersection_bot, resolve_property_gap_intersection_top_union_bot, \
-    resolve_gini_analysis, resolve_property_gap_union_top_union_bot, resolve_gini_with_filters, \
-    resolve_gini_with_filters_unbounded
+from resolver.resolver import *
 
 
 @app.route('/', methods=['GET'])
@@ -94,19 +90,25 @@ def gini_entities_analysis():
 def get_gini_with_filters():
     if request.method == 'GET':
         hash_code = request.args.get('hash')
-        print(hash_code)
         if hash_code == "":
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
         result = resolve_gini_with_filters(hash_code)
         return json.dumps(result)
-    elif request.methos == 'POST':
+    elif request.method == 'POST':
         body = request.json
-        if 'entity' or 'filters' not in body:
+        if 'entity' not in body or 'filters' not in body:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid Body")
         entity = body['entity']
         filters = body['filters']
         result = resolve_gini_with_filters_unbounded(entity, filters)
         return json.dumps(result)
+
+
+@app.route('/api/entities', methods=['GET'])
+@cross_origin()
+def get_wikidata_entities():
+    result = resolve_get_wikidata_entities()
+    return json.dumps(result)
 
 
 if __name__ == '__main__':

@@ -1,11 +1,11 @@
 import math
-import random
 import time
 
-from gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
+from utils.gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
 from main import db
-from models import Logs
-from wikidata import get_results
+from models.models import Logs
+from utils.wikidata import get_results
+import csv
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
 LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap": 1000}
@@ -44,6 +44,24 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
+def resolve_get_wikidata_entities():
+    entities = []
+    with open('./resolver/wikidata_entities.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            entity_link = row[0]
+            entity_label = row[1]
+            entity_link_split = entity_link.split("/")
+            if len(entity_link_split) <= 1:
+                continue
+            entity_id = entity_link_split[-1]
+            entity_obj = {"entityID": entity_id, "entityLabel": entity_label}
+            entities.append(entity_obj)
+    entities.sort(key=lambda x: (len(x["entityID"]), x["entityID"]))
+    result = {"amount": len(entities), "entities": entities}
+    return result
+
+
 # noinspection PyTypeChecker
 def resolve_gini_analysis(limit):
     result_arr = []
@@ -61,8 +79,6 @@ def resolve_gini_analysis(limit):
         entity_obj = {"entityID": entity_id, "entityLabel": entity_label, "gini_coefficient": gini_coefficient,
                       "entity_amount": amount}
         counter += 1
-        print(counter)
-        print(entity_obj)
         result_arr.append(entity_obj)
     result = {"len": len(result_arr), "data": result_arr}
     return result
@@ -484,8 +500,9 @@ def resolve_gini_with_filters_unbounded(entity, filters):
     insight = get_insight(original_data)
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
-    result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "amount": sum(each_amount),
+    result = {"instanceOf": instance_of_data, "limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
+              "each_amount": each_amount,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}
     save_logs_to_db({"entity": entity, "properties": ""})
     return result

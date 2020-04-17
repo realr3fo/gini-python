@@ -1,6 +1,6 @@
 import math
 
-from utils import chunks
+from utils.utils import chunks
 
 
 def calculate_gini(q_arr):
