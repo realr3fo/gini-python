@@ -46,17 +46,12 @@ def get_each_amount(chunked_q_arr):
 
 def resolve_get_wikidata_entities(page, sample=False):
     entities = []
-    with open('./resolver/wikidata_entities.csv') as csv_file:
+    file_name = './resolver/wikidata_entities_%d.csv' % page
+    with open(file_name) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         counter = 0
-        page_counter = 0
         for row in csv_reader:
             if counter == 10000:
-                page_counter += 1
-                counter = 0
-                if page_counter == page:
-                    break
-                entities = []
                 if sample:
                     break
             entity_link = row[0]
