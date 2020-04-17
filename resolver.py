@@ -429,6 +429,78 @@ def resolve_unbounded(entity):
     return result
 
 
+def resolve_gini_with_filters_unbounded(entity, filters):
+    instance_of_data = get_instances_of(entity)
+    query = """
+        SELECT ?item ?itemLabel ?cnt {
+            {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
+
+            {SELECT DISTINCT ?item WHERE {
+               ?item wdt:P31 wd:%s .""" % entity
+    for elem in filters:
+        for elem_filter in elem.keys():
+            query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+    query += """
+            } LIMIT %d}
+            OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+            ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
+
+            } GROUP BY ?item}
+
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+
+            } ORDER BY DESC(?cnt)
+        """ % LIMITS["unbounded"]
+    query_results = get_results(ENDPOINT_URL, query)
+    item_arr = query_results["results"]["bindings"]
+    if len(item_arr) == 0:
+        result = {
+            "instanceOf": {instance_of_data},
+            "gini": 0, "data": [], "entities": []}
+        return result
+    q_arr = []
+    for elem in item_arr:
+        item_link = elem['item']['value']
+        item_id = item_link.split("/")[-1]
+        property_count = int(elem['cnt']['value'])
+        item_label = elem['itemLabel']['value']
+        entity_obj = (item_id, property_count, item_label, item_link)
+        q_arr.append(entity_obj)
+
+    q_arr = sorted(q_arr, key=lambda x: x[1])
+    gini_coefficient = calculate_gini(q_arr)
+    gini_coefficient = round(gini_coefficient, 3)
+    if len(q_arr) >= LIMITS["unbounded"]:
+        exceed_limit = True
+    else:
+        exceed_limit = False
+
+    chunked_q_arr = get_chunked_arr(q_arr)
+    each_amount = get_each_amount(chunked_q_arr)
+    cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    original_data = list(cumulative_data)
+    cumulative_data.insert(0, 0)
+    data = normalize_data(cumulative_data)
+    insight = get_insight(original_data)
+    percentiles = get_ten_percentile(original_data)
+    percentiles.insert(0, '0%')
+    result = {"instanceOf": instance_of_data, "limit": LIMITS, "gini": gini_coefficient, "each_amount": each_amount,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles, "amount": sum(each_amount),
+              "insight": insight, "entities": entities}
+    save_logs_to_db({"entity": entity, "properties": ""})
+    return result
+
+
+def resolve_gini_with_filters(hash_code):
+    # get hashcode data from database
+    # get entity
+    # get filters
+    entity = "Q5"
+    filters = [{"P106": "Q82594"}, {"P21": "Q6581072"}]
+
+    return resolve_gini_with_filters_unbounded(entity, filters)
+
+
 def resolve_bounded(entity, properties_request):
     instance_of_data = get_instances_of(entity)
     properties = properties_request.split(",")

@@ -20,7 +20,8 @@ db = SQLAlchemy(app)
 
 from resolver import resolve_unbounded, resolve_bounded, resolve_property_gap, \
     resolve_property_gap_intersection_top_intersection_bot, resolve_property_gap_intersection_top_union_bot, \
-    resolve_gini_analysis, resolve_property_gap_union_top_union_bot
+    resolve_gini_analysis, resolve_property_gap_union_top_union_bot, resolve_gini_with_filters, \
+    resolve_gini_with_filters_unbounded
 
 
 @app.route('/', methods=['GET'])
@@ -86,6 +87,26 @@ def gini_entities_analysis():
     limit = int(limit)
     result = resolve_gini_analysis(limit)
     return result
+
+
+@app.route('/api/entity/gini', methods=['GET', 'POST'])
+@cross_origin()
+def get_gini_with_filters():
+    if request.method == 'GET':
+        hash_code = request.args.get('hash')
+        print(hash_code)
+        if hash_code == "":
+            abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
+        result = resolve_gini_with_filters(hash_code)
+        return json.dumps(result)
+    elif request.methos == 'POST':
+        body = request.json
+        if 'entity' or 'filters' not in body:
+            abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid Body")
+        entity = body['entity']
+        filters = body['filters']
+        result = resolve_gini_with_filters_unbounded(entity, filters)
+        return json.dumps(result)
 
 
 if __name__ == '__main__':
