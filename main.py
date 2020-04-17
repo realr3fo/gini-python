@@ -111,6 +111,13 @@ def get_wikidata_entities():
     return json.dumps(result)
 
 
+@app.route('/api/entities/sample', methods=['GET'])
+@cross_origin()
+def get_wikidata_entities_sample():
+    result = resolve_get_wikidata_entities(sample=True)
+    return json.dumps(result)
+
+
 @app.route('/api/filter/suggestions', methods=['GET'])
 @cross_origin()
 def get_filter_suggestions():

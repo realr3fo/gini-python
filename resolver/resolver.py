@@ -44,11 +44,15 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def resolve_get_wikidata_entities():
+def resolve_get_wikidata_entities(sample=False):
     entities = []
     with open('./resolver/wikidata_entities.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
+        counter = 0
         for row in csv_reader:
+            if counter == 100:
+                if sample:
+                    break
             entity_link = row[0]
             entity_label = row[1]
             entity_link_split = entity_link.split("/")
@@ -57,6 +61,7 @@ def resolve_get_wikidata_entities():
             entity_id = entity_link_split[-1]
             entity_obj = {"entityID": entity_id, "entityLabel": entity_label}
             entities.append(entity_obj)
+            counter += 1
     entities.sort(key=lambda x: (len(x["entityID"]), x["entityID"]))
     result = {"amount": len(entities), "entities": entities}
     return result
