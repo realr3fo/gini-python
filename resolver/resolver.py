@@ -50,7 +50,7 @@ def resolve_get_wikidata_entities(sample=False):
         csv_reader = csv.reader(csv_file, delimiter=',')
         counter = 0
         for row in csv_reader:
-            if counter == 100:
+            if counter == 10000:
                 if sample:
                     break
             entity_link = row[0]
@@ -67,25 +67,42 @@ def resolve_get_wikidata_entities(sample=False):
     return result
 
 
-def resolve_get_filter_suggestions(entity_id):
+def resolve_get_filter_suggestions(entity_id, sample=False):
     suggestions = []
-    query = """
-    SELECT distinct ?property  ?propertyLabel{
-      {SELECT distinct ?property {
-        {SELECT ?x WHERE {
-          ?x wdt:P31 wd:%s .
-        } LIMIT 500}
-        OPTIONAL { ?x ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) }
-        ?property wikibase:directClaim ?p .
-        FILTER NOT EXISTS {?property wikibase:propertyType wikibase:ExternalId .}
-      }}
-      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-    } 
-    """ % entity_id
-    query_results = get_results(ENDPOINT_URL, query)
-    results_suggestions = query_results["results"]["bindings"]
-    for elem in results_suggestions:
-        print(elem)
+    # query = """
+    # SELECT distinct ?property  ?propertyLabel{
+    #   {SELECT distinct ?property {
+    #     {SELECT ?x WHERE {
+    #       ?x wdt:P31 wd:%s .
+    #     } LIMIT 500}
+    #     OPTIONAL { ?x ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) }
+    #     ?property wikibase:directClaim ?p .
+    #     FILTER NOT EXISTS {?property wikibase:propertyType wikibase:ExternalId .}
+    #   }}
+    #   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    # }
+    # """ % entity_id
+    # query_results = get_results(ENDPOINT_URL, query)
+    # results_suggestions = query_results["results"]["bindings"]
+    # for elem in results_suggestions:
+    #     print(elem)
+    with open('./resolver/wikidata_properties.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        counter = 0
+        for row in csv_reader:
+            if counter == 100:
+                if sample:
+                    break
+            property_link = row[0]
+            property_label = row[1]
+            property_link_split = property_link.split("/")
+            if len(property_link_split) <= 1:
+                continue
+            property_id = property_link_split[-1]
+            property_obj = {"propertyID": property_id, "propertyLabel": property_label}
+            suggestions.append(property_obj)
+            counter += 1
+    suggestions.sort(key=lambda x: (len(x["propertyID"]), x["propertyID"]))
     result = {"amount": len(suggestions), "suggestions": suggestions}
     return result
 

@@ -122,9 +122,20 @@ def get_wikidata_entities_sample():
 @cross_origin()
 def get_filter_suggestions():
     entity_id = request.args.get('entity_id')
+    print(entity_id)
     if entity_id == "":
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
     result = resolve_get_filter_suggestions(entity_id)
+    return json.dumps(result)
+
+
+@app.route('/api/filter/suggestions/sample', methods=['GET'])
+@cross_origin()
+def get_filter_suggestions_sample():
+    entity_id = request.args.get('entity_id')
+    if entity_id == "":
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
+    result = resolve_get_filter_suggestions(entity_id, sample=True)
     return json.dumps(result)
 
 
