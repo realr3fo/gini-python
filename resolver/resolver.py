@@ -62,6 +62,29 @@ def resolve_get_wikidata_entities():
     return result
 
 
+def resolve_get_filter_suggestions(entity_id):
+    suggestions = []
+    query = """
+    SELECT distinct ?property  ?propertyLabel{
+      {SELECT distinct ?property {
+        {SELECT ?x WHERE {
+          ?x wdt:P31 wd:%s .
+        } LIMIT 500}
+        OPTIONAL { ?x ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) }
+        ?property wikibase:directClaim ?p .
+        FILTER NOT EXISTS {?property wikibase:propertyType wikibase:ExternalId .}
+      }}
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    } 
+    """ % entity_id
+    query_results = get_results(ENDPOINT_URL, query)
+    results_suggestions = query_results["results"]["bindings"]
+    for elem in results_suggestions:
+        print(elem)
+    result = {"amount": len(suggestions), "suggestions": suggestions}
+    return result
+
+
 # noinspection PyTypeChecker
 def resolve_gini_analysis(limit):
     result_arr = []
