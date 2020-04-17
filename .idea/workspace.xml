@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_properties.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resolver/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver/resolver.py" afterDir="false" />
@@ -168,7 +167,7 @@
       <workItem from="1585973830864" duration="16000" />
       <workItem from="1586093296959" duration="1717000" />
       <workItem from="1586170213202" duration="1322000" />
-      <workItem from="1587022831090" duration="9955000" />
+      <workItem from="1587022831090" duration="10890000" />
     </task>
     <servers />
   </component>

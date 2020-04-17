@@ -107,7 +107,12 @@ def get_gini_with_filters():
 @app.route('/api/entities', methods=['GET'])
 @cross_origin()
 def get_wikidata_entities():
-    result = resolve_get_wikidata_entities()
+    page = request.args.get("page")
+    try:
+        int(page)
+    except ValueError:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid Page")
+    result = resolve_get_wikidata_entities(int(page))
     return json.dumps(result)
 
 
