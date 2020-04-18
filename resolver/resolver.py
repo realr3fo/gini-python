@@ -65,8 +65,49 @@ def resolve_get_wikidata_entities(search):
     return result
 
 
-def resolve_get_filter_suggestions(entity_id, sample=False):
+def resolve_get_filter_suggestions(entity_id, filled_properties):
     suggestions = []
+    filters = ""
+    if filled_properties != "" and filled_properties is not None:
+        filled_property = filled_properties.split(",")
+        for elem in filled_property:
+            filters += " FILTER(?p != wdt:%s) " % elem
+    query = """
+    SELECT ?pFull ?pFullLabel ?cnt {
+          ?pFull wikibase:directClaim ?p .
+          MINUS {?pFull <http://wikiba.se/ontology#propertyType> <http://wikiba.se/ontology#ExternalId>}
+          {
+            SELECT ?p (COUNT(?s) AS ?cnt) {
+             SELECT DISTINCT ?s ?p WHERE {
+                {SELECT DISTINCT ?s {
+                  { SELECT ?s WHERE {
+                    ?s wdt:P31 wd:%s.
+                  } LIMIT 1000 }
+                }}
+                OPTIONAL {
+                  ?s ?p ?o .
+                  FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
+                }
+               FILTER(?p != wdt:P31)
+               FILTER(?p != wdt:P373)
+               %s
+              }
+            } GROUP BY ?p
+          }
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
+        } ORDER BY DESC(?cnt)
+        limit 10
+    """ % (entity_id, filters)
+    query_results = get_results(ENDPOINT_URL, query)
+    results = query_results["results"]["bindings"]
+    for elem in results:
+        prop_link = elem["pFull"]["value"]
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem["pFullLabel"]["value"]
+        prop_count = elem["cnt"]["value"]
+        prop_obj = {"propertyLink": prop_link, "propertyID": prop_id, "propertyLabel": prop_label,
+                    "propertyCount": prop_count}
+        suggestions.append(prop_obj)
     result = {"amount": len(suggestions), "suggestions": suggestions}
     return result
 

@@ -2,20 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resolver/top_entities.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resolver/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver/resolver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata entities.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_1.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_2.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_3.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_4.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_5.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_6.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_7.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_properties.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -179,7 +168,7 @@
       <workItem from="1586093296959" duration="1717000" />
       <workItem from="1586170213202" duration="1322000" />
       <workItem from="1587022831090" duration="11796000" />
-      <workItem from="1587199022400" duration="1554000" />
+      <workItem from="1587199022400" duration="3340000" />
     </task>
     <servers />
   </component>

@@ -118,7 +118,8 @@ def get_filter_suggestions():
     entity_id = request.args.get('entity_id')
     if entity_id == "":
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
-    result = resolve_get_filter_suggestions(entity_id)
+    filled_properties = request.args.get('filled_properties')
+    result = resolve_get_filter_suggestions(entity_id, filled_properties)
     return json.dumps(result)
 
 
