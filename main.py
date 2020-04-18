@@ -131,14 +131,32 @@ def get_filter_suggestions():
     return json.dumps(result)
 
 
+@app.route('/api/property/value/suggestions', methods=['POST'])
+@cross_origin()
+def get_property_value_suggestions():
+    body = request.json
+    if body is None or "entityID" not in body or "propertyID" not in body:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id and propertyID")
+    entity_id = body["entityID"]
+    property_id = body["propertyID"]
+    filters = []
+    if "filters" in body:
+        filters = body["filters"]
+    result = resolve_get_property_value_suggestions(entity_id, property_id, filters)
+    return json.dumps(result)
+
+
 @app.route('/api/dashboard', methods=['POST'])
 @cross_origin()
 def create_dashboard():
     body = request.json
-    if "entity" not in body:
+    if body is None or "entityID" not in body:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
     entity_id = body['entityID']
-    filters = body["filters"]
+    filters = {}
+    if "filters" in body:
+        filters = body["filters"]
+
     result = resolve_create_dashboard(entity_id, filters)
     return json.dumps(result)
 
