@@ -107,19 +107,8 @@ def get_gini_with_filters():
 @app.route('/api/entities', methods=['GET'])
 @cross_origin()
 def get_wikidata_entities():
-    page = request.args.get("page")
-    try:
-        int(page)
-    except ValueError:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid Page")
-    result = resolve_get_wikidata_entities(int(page))
-    return json.dumps(result)
-
-
-@app.route('/api/entities/sample', methods=['GET'])
-@cross_origin()
-def get_wikidata_entities_sample():
-    result = resolve_get_wikidata_entities(sample=True)
+    search = request.args.get('search')
+    result = resolve_get_wikidata_entities(search)
     return json.dumps(result)
 
 
@@ -127,20 +116,9 @@ def get_wikidata_entities_sample():
 @cross_origin()
 def get_filter_suggestions():
     entity_id = request.args.get('entity_id')
-    print(entity_id)
     if entity_id == "":
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
     result = resolve_get_filter_suggestions(entity_id)
-    return json.dumps(result)
-
-
-@app.route('/api/filter/suggestions/sample', methods=['GET'])
-@cross_origin()
-def get_filter_suggestions_sample():
-    entity_id = request.args.get('entity_id')
-    if entity_id == "":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
-    result = resolve_get_filter_suggestions(entity_id, sample=True)
     return json.dumps(result)
 
 

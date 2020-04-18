@@ -2,16 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf6173a1-a0af-496c-891a-25a4c918e6a8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_1.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_2.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_3.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_4.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_5.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_6.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resolver/wikidata_entities_7.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resolver/top_entities.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resolver/resolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/resolver/resolver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities.csv" beforeDir="false" afterPath="$PROJECT_DIR$/resolver/wikidata entities.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata entities.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_1.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_2.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_3.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_5.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_6.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_entities_7.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resolver/wikidata_properties.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,7 +178,8 @@
       <workItem from="1585973830864" duration="16000" />
       <workItem from="1586093296959" duration="1717000" />
       <workItem from="1586170213202" duration="1322000" />
-      <workItem from="1587022831090" duration="11307000" />
+      <workItem from="1587022831090" duration="11796000" />
+      <workItem from="1587199022400" duration="1554000" />
     </task>
     <servers />
   </component>
@@ -230,10 +235,10 @@
       <screen x="0" y="23" width="1280" height="720" />
     </state>
     <state x="302" y="23" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.23.1280.720@0.23.1280.720" timestamp="1585488586216" />
-    <state x="298" y="140" width="683" height="486" key="find.popup" timestamp="1587125611641">
+    <state x="298" y="140" width="683" height="486" key="find.popup" timestamp="1587201926543">
       <screen x="0" y="23" width="1280" height="720" />
     </state>
-    <state x="298" y="140" width="683" height="486" key="find.popup/0.23.1280.720@0.23.1280.720" timestamp="1587125611641" />
+    <state x="298" y="140" width="683" height="486" key="find.popup/0.23.1280.720@0.23.1280.720" timestamp="1587201926543" />
     <state x="515" y="242" width="250" height="278" key="jetbrains.javascript.buildTools.run-task-popup" timestamp="1584591641385">
       <screen x="0" y="23" width="1280" height="711" />
     </state>
@@ -242,6 +247,10 @@
       <screen x="0" y="23" width="1280" height="711" />
     </state>
     <state x="402" y="23" width="476" height="711" key="refactoring.ChangeSignatureDialog/0.23.1280.711@0.23.1280.711" timestamp="1584162142399" />
+    <state x="305" y="67" width="670" height="676" key="search.everywhere.popup" timestamp="1587201411932">
+      <screen x="0" y="23" width="1280" height="720" />
+    </state>
+    <state x="305" y="67" width="670" height="676" key="search.everywhere.popup/0.23.1280.720@0.23.1280.720" timestamp="1587201411932" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/python_gini$main.coverage" NAME="main Coverage Results" MODIFIED="1585400337226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

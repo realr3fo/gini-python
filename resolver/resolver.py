@@ -1,5 +1,8 @@
+import json
 import math
 import time
+
+import requests
 
 from utils.gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
 from main import db
@@ -44,69 +47,26 @@ def get_each_amount(chunked_q_arr):
     return result
 
 
-def resolve_get_wikidata_entities(page, sample=False):
+def resolve_get_wikidata_entities(search):
     entities = []
-    file_name = './resolver/wikidata_entities_%d.csv' % page
-    with open(file_name) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        counter = 0
-        for row in csv_reader:
-            if counter == 10000:
-                if sample:
-                    break
-            entity_link = row[0]
-            entity_label = row[1]
-            entity_link_split = entity_link.split("/")
-            if len(entity_link_split) <= 1:
-                continue
-            entity_id = entity_link_split[-1]
-            entity_obj = {"entityID": entity_id, "entityLabel": entity_label}
-            entities.append(entity_obj)
-            counter += 1
-    entities.sort(key=lambda x: (len(x["entityID"]), x["entityID"]))
-    end = False
-    if page == 7:
-        end = True
-    result = {"amount": len(entities),  "end": end, "page": page, "entities": entities}
+    if search == "" or search is None:
+        with open('./resolver/top_entities.json') as json_file:
+            data = json.load(json_file)
+            for entity in data['search']:
+                entities.append(entity)
+    else:
+        search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&origin=*&type=item" \
+                     "&search=%s&language=en" % search
+        search_result = requests.get(search_url)
+        search_result = search_result.json()
+        for entity in search_result["search"]:
+            entities.append(entity)
+    result = {"amount": len(entities), "entities": entities}
     return result
 
 
 def resolve_get_filter_suggestions(entity_id, sample=False):
     suggestions = []
-    # query = """
-    # SELECT distinct ?property  ?propertyLabel{
-    #   {SELECT distinct ?property {
-    #     {SELECT ?x WHERE {
-    #       ?x wdt:P31 wd:%s .
-    #     } LIMIT 500}
-    #     OPTIONAL { ?x ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) }
-    #     ?property wikibase:directClaim ?p .
-    #     FILTER NOT EXISTS {?property wikibase:propertyType wikibase:ExternalId .}
-    #   }}
-    #   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-    # }
-    # """ % entity_id
-    # query_results = get_results(ENDPOINT_URL, query)
-    # results_suggestions = query_results["results"]["bindings"]
-    # for elem in results_suggestions:
-    #     print(elem)
-    with open('./resolver/wikidata_properties.csv') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        counter = 0
-        for row in csv_reader:
-            if counter == 100:
-                if sample:
-                    break
-            property_link = row[0]
-            property_label = row[1]
-            property_link_split = property_link.split("/")
-            if len(property_link_split) <= 1:
-                continue
-            property_id = property_link_split[-1]
-            property_obj = {"propertyID": property_id, "propertyLabel": property_label}
-            suggestions.append(property_obj)
-            counter += 1
-    suggestions.sort(key=lambda x: (len(x["propertyID"]), x["propertyID"]))
     result = {"amount": len(suggestions), "suggestions": suggestions}
     return result
 

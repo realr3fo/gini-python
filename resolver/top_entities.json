@@ -1,0 +1,116 @@
+{
+  "amount": 7,
+  "search": [
+    {
+      "id": "Q5",
+      "title": "Q5",
+      "pageid": 133,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q5",
+      "concepturi": "http://www.wikidata.org/entity/Q5",
+      "label": "human",
+      "description": "common name of Homo sapiens, unique extant species of the genus Homo",
+      "match": {
+        "type": "label",
+        "language": "en",
+        "text": "human"
+      }
+    },
+    {
+      "id": "Q6256",
+      "title": "Q6256",
+      "pageid": 7367,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q6256",
+      "concepturi": "http://www.wikidata.org/entity/Q6256",
+      "label": "country",
+      "description": "distinct region in geography; a broad term that can include political divisions or regions associated with distinct political characteristics",
+      "match": {
+        "type": "alias",
+        "language": "en",
+        "text": "countries"
+      },
+      "aliases": [
+        "countries"
+      ]
+    },
+    {
+      "id": "Q9143",
+      "title": "Q9143",
+      "pageid": 10499,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q9143",
+      "concepturi": "http://www.wikidata.org/entity/Q9143",
+      "label": "programming language",
+      "description": "language designed to communicate instructions to a machine",
+      "match": {
+        "type": "label",
+        "language": "en",
+        "text": "programming language"
+      }
+    },
+    {
+      "id": "Q1179487",
+      "title": "Q1179487",
+      "pageid": 1124977,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q1179487",
+      "concepturi": "http://www.wikidata.org/entity/Q1179487",
+      "label": "Movies",
+      "description": "album by Holger Czukay",
+      "match": {
+        "type": "label",
+        "language": "en",
+        "text": "Movies"
+      }
+    },
+    {
+      "id": "Q18123741",
+      "title": "Q18123741",
+      "pageid": 19656860,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q18123741",
+      "concepturi": "http://www.wikidata.org/entity/Q18123741",
+      "label": "infectious disease",
+      "description": "disease caused by infection of pathogenic biological agents in a host organism",
+      "match": {
+        "type": "label",
+        "language": "en",
+        "text": "infectious disease"
+      }
+    },
+    {
+      "id": "Q2811",
+      "title": "Q2811",
+      "pageid": 3793,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q2811",
+      "concepturi": "http://www.wikidata.org/entity/Q2811",
+      "label": "submarine",
+      "description": "watercraft capable of independent operation underwater",
+      "match": {
+        "type": "label",
+        "language": "en",
+        "text": "submarine"
+      }
+    },
+    {
+      "id": "Q7889",
+      "title": "Q7889",
+      "pageid": 9137,
+      "repository": "local",
+      "url": "//www.wikidata.org/wiki/Q7889",
+      "concepturi": "http://www.wikidata.org/entity/Q7889",
+      "label": "video game",
+      "description": "electronic game that involves interaction with a user interface to generate visual feedback on a video device such as a TV screen or computer monitor",
+      "match": {
+        "type": "alias",
+        "language": "en",
+        "text": "video games"
+      },
+      "aliases": [
+        "video games"
+      ]
+    }
+  ]
+}
