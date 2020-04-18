@@ -112,6 +112,27 @@ def resolve_get_filter_suggestions(entity_id, filled_properties):
     return result
 
 
+def resolve_get_wikidata_properties(search):
+    properties = []
+    if search == "" or search is None:
+        pass
+    else:
+        search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&search=%s&language=en" \
+                     "&type=property" % search
+        search_result = requests.get(search_url)
+        search_result = search_result.json()
+        for entity in search_result["search"]:
+            properties.append(entity)
+    result = {"amount": len(properties), "properties": properties}
+    return result
+
+
+def resolve_create_dashboard(entity_id, filters):
+    hash_code = ""
+    result = {"hash": hash_code}
+    return result
+
+
 # noinspection PyTypeChecker
 def resolve_gini_analysis(limit):
     result_arr = []

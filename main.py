@@ -112,6 +112,14 @@ def get_wikidata_entities():
     return json.dumps(result)
 
 
+@app.route('/api/properties', methods=['GET'])
+@cross_origin()
+def get_wikidata_properties():
+    search = request.args.get('search')
+    result = resolve_get_wikidata_properties(search)
+    return json.dumps(result)
+
+
 @app.route('/api/filter/suggestions', methods=['GET'])
 @cross_origin()
 def get_filter_suggestions():
@@ -120,6 +128,18 @@ def get_filter_suggestions():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
     filled_properties = request.args.get('filled_properties')
     result = resolve_get_filter_suggestions(entity_id, filled_properties)
+    return json.dumps(result)
+
+
+@app.route('/api/dashboard', methods=['POST'])
+@cross_origin()
+def create_dashboard():
+    body = request.json
+    if "entity" not in body:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
+    entity_id = body['entityID']
+    filters = body["filters"]
+    result = resolve_create_dashboard(entity_id, filters)
     return json.dumps(result)
 
 
