@@ -153,7 +153,7 @@ def create_dashboard():
     if body is None or "entityID" not in body:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
     entity_id = body['entityID']
-    filters = {}
+    filters = []
     if "filters" in body:
         filters = body["filters"]
 

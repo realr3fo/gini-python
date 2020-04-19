@@ -1,4 +1,4 @@
-import hashlib
+import uuid
 import json
 import math
 import time
@@ -7,7 +7,7 @@ import requests
 
 from utils.gini import calculate_gini, normalize_data, get_chunked_arr, get_cumulative_data_and_entities
 from main import db
-from models.models import Logs
+from models.models import Logs, Dashboards
 from utils.wikidata import get_results
 import csv
 
@@ -162,12 +162,13 @@ def resolve_get_property_value_suggestions(entity_id, property_id, filters):
 
 
 def resolve_create_dashboard(entity_id, filters):
-    hash_code = ""
-    str_text = "GeeksforGeeks"
-    result = hashlib.md5(str_text.encode())
-    str_code = result.hexdigest()
-    print(str_code[:10], len(str_code))
-    result = {"hash": hash_code}
+    uuid_string = str(uuid.uuid4())
+    hash_code = uuid_string.split("-")[-1]
+    data = {'name': "", 'author': "", 'entity': entity_id, 'hash_code': hash_code, 'filters': str(filters),
+            'properties': ""}
+    save_dashboard_to_db(data)
+    # list_filters = eval(data["filters"]) # convert string to list
+    result = {"hashCode": hash_code}
     return result
 
 
@@ -691,6 +692,30 @@ def resolve_bounded(entity, properties_request):
     save_logs_to_db({"entity": entity, "properties": properties_request})
 
     return result
+
+
+def save_dashboard_to_db(data):
+    name = data['name']
+    author = data['author']
+    entity = data['entity']
+    hash_code = data['hash_code']
+    filters = data['filters']
+    properties = data['properties']
+    timestamp = str(time.time())
+    try:
+        dashboard = Dashboards(
+            name=name,
+            author=author,
+            entity=entity,
+            hash_code=hash_code,
+            filters=filters,
+            properties=properties,
+            timestamp=timestamp
+        )
+        db.session.add(dashboard)
+        db.session.commit()
+    except Exception as e:
+        return str(e)
 
 
 def save_logs_to_db(data):
