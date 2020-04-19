@@ -89,10 +89,12 @@ def gini_entities_analysis():
 @cross_origin()
 def get_gini_with_filters():
     if request.method == 'GET':
-        hash_code = request.args.get('hash')
-        if hash_code == "":
+        hash_code = request.args.get('hash_code')
+        if hash_code == "" or hash_code is None:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
-        result = resolve_gini_with_filters(hash_code)
+        result = resolve_get_entity_gini_by_hash(hash_code)
+        if "errorMessage" in result:
+            abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
         return json.dumps(result)
     elif request.method == 'POST':
         body = request.json
