@@ -164,11 +164,72 @@ def resolve_get_property_value_suggestions(entity_id, property_id, filters):
 def resolve_create_dashboard(entity_id, filters):
     uuid_string = str(uuid.uuid4())
     hash_code = uuid_string.split("-")[-1]
+    if filters == "" or filters is None:
+        filters = "[]"
     data = {'name': "", 'author': "", 'entity': entity_id, 'hash_code': hash_code, 'filters': str(filters),
-            'properties': ""}
+            'properties': "[]"}
     save_dashboard_to_db(data)
     # list_filters = eval(data["filters"]) # convert string to list
     result = {"hashCode": hash_code}
+    return result
+
+
+def resolve_get_entity_information(hash_code):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    entity_id = single_dashboard.entity
+    filters = eval(single_dashboard.filters)
+    properties = eval(single_dashboard.properties)
+    ids = ""
+    ids += str(entity_id)
+    for single_filter in filters:
+        for property_id, entity_id in single_filter.items():
+            ids += "%7C" + property_id
+            ids += "%7C" + entity_id
+    for single_property in properties:
+        ids += "%7C" + single_property
+
+    wikidata_url = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&ids=%s&props=labels" \
+                   "%%7Cdescriptions&languages=en" % ids
+    wikidata_result = requests.get(wikidata_url)
+    wikidata_result = wikidata_result.json()
+    objects = wikidata_result["entities"]
+
+    entity_label = objects[entity_id]["labels"]["en"]["value"]
+    entity_description = objects[entity_id]["descriptions"]["en"]["value"]
+    result_entity = {"entityID": entity_id, "entityLabel": entity_label, "entityDescription": entity_description}
+
+    result_filters = []
+    for single_filter in filters:
+        for property_id, entity_id in single_filter.items():
+            filter_id = property_id
+            filter_label = objects[filter_id]["labels"]["en"]["value"]
+            filter_description = objects[filter_id]["descriptions"]["en"]["value"]
+
+            filter_value_id = entity_id
+            filter_value_label = objects[filter_value_id]["labels"]["en"]["value"]
+            filter_value_description = objects[filter_value_id]["descriptions"]["en"]["value"]
+
+            result_filter_object = {"filterID": filter_id, "filterLabel": filter_label,
+                                    "filterDescription": filter_description, "filterValueID": filter_value_id,
+                                    "filterValueLabel": filter_value_label,
+                                    "filterValueDescription": filter_value_description}
+            result_filters.append(result_filter_object)
+
+    result_properties = []
+    for single_property in properties:
+        property_id = single_property
+        property_label = objects[property_id]["labels"]["en"]["value"]
+        property_description = objects[property_id]["descriptions"]["en"]["value"]
+        property_object = {"propertyID": property_id, "propertyLabel": property_label,
+                           "propertyDescription": property_description}
+        result_properties.append(property_object)
+
+    result = {"entity": result_entity, "filters": result_filters, "properties": result_properties}
+    return result
+
+
+def resolve_get_entity_gini_by_hash(hash_code):
+    result = {}
     return result
 
 

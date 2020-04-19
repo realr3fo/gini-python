@@ -161,5 +161,25 @@ def create_dashboard():
     return json.dumps(result)
 
 
+@app.route('/api/entity/information', methods=['GET'])
+@cross_origin()
+def get_entity_information():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    result = resolve_get_entity_information(hash_code)
+    return json.dumps(result)
+
+
+@app.route('/api/entity/gini', methods=['GET'])
+@cross_origin()
+def get_entity_gini_by_hash():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    result = resolve_get_entity_gini_by_hash(hash_code)
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

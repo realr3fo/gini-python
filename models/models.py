@@ -47,7 +47,17 @@ class Dashboards(db.Model):
         self.timestamp = timestamp
 
     def __repr__(self):
-        return '<id {}>'.format(self.id)
+        return """{
+            'id': %s,
+            'name': %s,
+            'author': %s,
+            'entity': %s,
+            'hash_code': %s,
+            'filters': %s,
+            'properties': %s,
+            'timestamp': %s
+        }""" % (
+            self.id, self.name, self.author, self.entity, self.hash_code, self.filters, self.properties, self.timestamp)
 
     def serialize(self):
         return {
