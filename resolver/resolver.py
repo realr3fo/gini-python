@@ -200,6 +200,7 @@ def resolve_get_entity_information(hash_code):
     wikidata_result = wikidata_result.json()
     objects = wikidata_result["entities"]
 
+    entity_id = single_dashboard.entity
     entity_label = objects[entity_id]["labels"]["en"]["value"]
     entity_description = objects[entity_id]["descriptions"]["en"]["value"]
     result_entity = {"entityID": entity_id, "entityLabel": entity_label, "entityDescription": entity_description}
