@@ -183,5 +183,28 @@ def get_entity_gini_by_hash():
     return json.dumps(result)
 
 
+@app.route('/api/properties/info', methods=['GET'])
+@cross_origin()
+def get_properties_info():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    result = resolve_get_properties_info(hash_code)
+    return json.dumps(result)
+
+
+@app.route('/api/properties/gap', methods=['POST'])
+@cross_origin()
+def get_properties_gap():
+    body = request.json
+    if "entities" not in body:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities in body")
+    entities = body["entities"]
+    result = resolve_get_property_gap_api_sandbox(entities)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
