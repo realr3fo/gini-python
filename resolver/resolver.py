@@ -30,16 +30,58 @@ def resolve_get_wikidata_properties(search):
 def resolve_create_dashboard(entity_id, filters):
     uuid_string = str(uuid.uuid4())
     hash_code = uuid_string.split("-")[-1]
-    if filters == "" or filters is None:
-        filters = "[]"
-    data = {'name': "", 'author': "", 'entity': entity_id, 'hash_code': hash_code, 'filters': str(filters),
-            'properties': "[]"}
+    data = {'name': "", 'author': "", 'entity': entity_id, 'hash_code': hash_code}
+    if filters != "" or filters is not None:
+        data['filters'] = filters
     save_status = save_dashboard_to_db(data)
+
     if save_status != "success":
         return {"errorMessage": save_status}
 
     result = {"hashCode": hash_code}
 
+    return result
+
+
+def resolve_edit_dashboard(data):
+    hash_code = data["hashCode"]
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    entity_name = single_dashboard.name
+    entity_author = single_dashboard.author
+    entity_id = single_dashboard.entity
+    entity_filters = single_dashboard.filters
+    entity_properties = single_dashboard.properties
+    entity_additional_filters = single_dashboard.additional_filters
+    entity_compare_filters = single_dashboard.compare_filters
+    entity_analysis_filters = single_dashboard.analysis_filters
+
+    if "entityID" in data:
+        entity_id = str(data["entityID"])
+    if "filters" in data:
+        entity_filters = str(data["filters"])
+    if "properties" in data:
+        entity_properties = str(data["properties"])
+    if "additionalFilters" in data:
+        entity_additional_filters = str(data["additionalFilters"])
+    if "compareFilters" in data:
+        entity_compare_filters = str(data["compareFilters"])
+    if "analysisFilters" in data:
+        entity_analysis_filters = str(data["analysisFilters"])
+    single_dashboard.entity = entity_id
+    single_dashboard.filters = entity_filters
+    single_dashboard.properties = entity_properties
+    single_dashboard.additional_filters = entity_additional_filters
+    single_dashboard.compare_filters = entity_compare_filters
+    single_dashboard.analysis_filters = entity_analysis_filters
+
+    if "entityID" in data or "filters" in data or "properties" in data:
+        single_dashboard.instances = {}
+
+    db.session.commit()
+    updated_dashboard = single_dashboard.serialize()
+    result = {"result": updated_dashboard}
     return result
 
 
@@ -68,7 +110,7 @@ def resolve_get_property_gap_api_sandbox(hash_code):
 def resolve_get_entity_gini_by_hash(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
-        return {"errorMessage": "hash not found"}
+        return {"errorMessage": "data with the given hash code was not found"}
 
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
@@ -110,21 +152,17 @@ def save_dashboard_to_db(data):
     author = data['author']
     entity = data['entity']
     hash_code = data['hash_code']
-    filters = data['filters']
-    properties = data['properties']
     timestamp = str(time.time())
-    instances = {}
     try:
         dashboard = Dashboards(
             name=name,
             author=author,
             entity=entity,
             hash_code=hash_code,
-            filters=filters,
-            properties=properties,
             timestamp=timestamp,
-            instances=instances
         )
+        if 'filters' in data:
+            dashboard.filters = str(data['filters'])
         db.session.add(dashboard)
         db.session.commit()
         return "success"

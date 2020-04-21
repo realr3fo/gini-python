@@ -91,6 +91,18 @@ def create_dashboard():
     return json.dumps(result)
 
 
+@app.route('/api/dashboard/edit', methods=['POST'])
+@cross_origin()
+def edit_dashboard():
+    body = request.json
+    if body is None or "hashCode" not in body:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
+    result = resolve_edit_dashboard(body)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
 @app.route('/api/entity/information', methods=['GET'])
 @cross_origin()
 def get_entity_information():
@@ -138,6 +150,7 @@ def get_properties_gap():
 def get_all_profiles():
     result = resolve_get_all_profiles()
     return json.dumps(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

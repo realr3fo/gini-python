@@ -32,21 +32,21 @@ class Dashboards(db.Model):
     name = db.Column(db.String())
     author = db.Column(db.String())
     entity = db.Column(db.String())
-    hash_code = db.Column(db.String())
-    filters = db.Column(db.String())
-    properties = db.Column(db.String())
+    hash_code = db.Column(db.String(), unique=True)
+    filters = db.Column(db.String(), default="[]")
+    properties = db.Column(db.String(), default="[]")
     timestamp = db.Column(db.String())
-    instances = db.Column(db.JSON())
+    instances = db.Column(db.JSON(), default={})
+    compare_filters = db.Column(db.String(), default="[]")
+    analysis_filters = db.Column(db.String(), default="[]")
+    additional_filters = db.Column(db.String(), default="[]")
 
-    def __init__(self, name, author, entity, hash_code, filters, properties, timestamp, instances):
+    def __init__(self, name, author, entity, hash_code, timestamp):
         self.name = name
         self.author = author
         self.entity = entity
         self.hash_code = hash_code
-        self.filters = filters
-        self.properties = properties
         self.timestamp = timestamp
-        self.instances = instances
 
     def __repr__(self):
         return """{
@@ -71,5 +71,8 @@ class Dashboards(db.Model):
             'filters': self.filters,
             'properties': self.properties,
             'timestamp': self.timestamp,
-            'instances': self.instances
+            'instances': self.instances,
+            'compareFilters': self.compare_filters,
+            'analysisFilters': self.analysis_filters,
+            'additionalFilters': self.additional_filters
         }
