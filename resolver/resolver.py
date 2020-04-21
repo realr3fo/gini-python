@@ -82,7 +82,26 @@ def resolve_get_entity_gini_by_hash(hash_code):
         db.session.commit()
     else:
         result = resolve_gini_with_filters_bounded(entity_id, filters, properties)
+        entities = {"entities": result["entities"]}
+        json_entities = json.loads(json.dumps(entities))
+        single_dashboard.instances = json_entities
+        db.session.commit()
 
+    return result
+
+
+def resolve_get_all_profiles():
+    dashboards = Dashboards.query.all()
+    profiles = []
+    for dashboard in dashboards:
+        entity_id = dashboard.entity
+        profile_hash_code = dashboard.hash_code
+        profile_filters = dashboard.filters
+        profile_properties = dashboard.properties
+        profile_obj = {"entityID": entity_id, "profileHashCode": profile_hash_code, "profileFilters": profile_filters,
+                       "profileProperties": profile_properties}
+        profiles.append(profile_obj)
+    result = {"profiles": profiles}
     return result
 
 

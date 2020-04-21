@@ -133,12 +133,11 @@ def get_properties_gap():
     return json.dumps(result)
 
 
-@app.route('/api/test/json', methods=['GET'])
+@app.route('/api/browse', methods=['GET'])
 @cross_origin()
-def test_json():
-    result = resolve_test_json()
+def get_all_profiles():
+    result = resolve_get_all_profiles()
     return json.dumps(result)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
