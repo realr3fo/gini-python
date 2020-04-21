@@ -1,6 +1,5 @@
 import requests
 
-from resolver.resolver import ENDPOINT_URL
 from utils.wikidata import get_results
 
 
@@ -109,6 +108,7 @@ def resolve_get_properties_info_result(single_dashboard):
       SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
 } ORDER BY DESC(?cnt)
     """ % (entity_id, filter_query_top, filter_query_bottom, filter_property)
+    from resolver.resolver import ENDPOINT_URL
     query_results = get_results(ENDPOINT_URL, query)
     properties_bindings = query_results["results"]["bindings"]
     for prop in properties_bindings:

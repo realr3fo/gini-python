@@ -1,6 +1,5 @@
 import math
 
-from resolver.resolver import LIMITS, ENDPOINT_URL
 from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data
 from utils.wikidata import get_results
 
@@ -44,6 +43,7 @@ def resolve_gini_with_filters_unbounded(entity, filters):
     for elem in filters:
         for elem_filter in elem.keys():
             query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+    from resolver.resolver import LIMITS
     query += """
             } LIMIT %d}
             OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
@@ -55,6 +55,7 @@ def resolve_gini_with_filters_unbounded(entity, filters):
 
             } ORDER BY DESC(?cnt)
         """ % LIMITS["unbounded"]
+    from resolver.resolver import ENDPOINT_URL
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
@@ -118,6 +119,7 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
     query += "{ SELECT ?item "
     for elem in properties:
         query += "?%s " % elem
+    from resolver.resolver import LIMITS
     query += "WHERE{ { SELECT ?item WHERE { ?item wdt:P31 wd:%s . %s } LIMIT %d}" % (
         entity_id, filter_query, LIMITS["bounded"])
     for i in range(len(properties)):
@@ -125,6 +127,7 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
     for elem in properties:
         query += "OPTIONAL { BIND (0 AS ?%s) } " % elem
     query += """}} SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
+    from resolver.resolver import ENDPOINT_URL
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     q_arr = []

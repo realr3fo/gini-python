@@ -2,7 +2,6 @@ import json
 
 import requests
 
-from resolver.resolver import ENDPOINT_URL
 from utils.wikidata import get_results
 
 
@@ -57,6 +56,7 @@ def resolve_get_filter_suggestions_result(entity_id, filled_properties):
         } ORDER BY DESC(?cnt)
         limit 10
     """ % (entity_id, filters)
+    from resolver.resolver import ENDPOINT_URL
     query_results = get_results(ENDPOINT_URL, query)
     results = query_results["results"]["bindings"]
     for elem in results:
