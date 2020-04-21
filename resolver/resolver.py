@@ -1,3 +1,4 @@
+import json
 import time
 import uuid
 
@@ -12,12 +13,6 @@ from resolver.resolver_gini import resolve_gini_with_filters_unbounded, resolve_
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
 LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap": 1000}
-
-
-def resolve_test_json():
-
-    result = {}
-    return result
 
 
 def resolve_get_wikidata_entities(search):
@@ -39,8 +34,12 @@ def resolve_create_dashboard(entity_id, filters):
         filters = "[]"
     data = {'name': "", 'author': "", 'entity': entity_id, 'hash_code': hash_code, 'filters': str(filters),
             'properties': "[]"}
-    save_dashboard_to_db(data)
+    save_status = save_dashboard_to_db(data)
+    if save_status != "success":
+        return {"errorMessage": save_status}
+
     result = {"hashCode": hash_code}
+
     return result
 
 
@@ -54,7 +53,9 @@ def resolve_get_properties_info(hash_code):
     return resolve_get_properties_info_result(single_dashboard)
 
 
-def resolve_get_property_gap_api_sandbox(entities):
+def resolve_get_property_gap_api_sandbox(hash_code):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    entities = single_dashboard.instances["entities"]
     if len(entities) == 0:
         return {"errorMessage": "list of entities is impty"}
     sample_entity_obj = entities[0]
@@ -75,6 +76,10 @@ def resolve_get_entity_gini_by_hash(hash_code):
 
     if len(properties) == 0:
         result = resolve_gini_with_filters_unbounded(entity_id, filters)
+        entities = {"entities": result["entities"]}
+        json_entities = json.loads(json.dumps(entities))
+        single_dashboard.instances = json_entities
+        db.session.commit()
     else:
         result = resolve_gini_with_filters_bounded(entity_id, filters, properties)
 
@@ -89,6 +94,7 @@ def save_dashboard_to_db(data):
     filters = data['filters']
     properties = data['properties']
     timestamp = str(time.time())
+    instances = {}
     try:
         dashboard = Dashboards(
             name=name,
@@ -97,9 +103,11 @@ def save_dashboard_to_db(data):
             hash_code=hash_code,
             filters=filters,
             properties=properties,
-            timestamp=timestamp
+            timestamp=timestamp,
+            instances=instances
         )
         db.session.add(dashboard)
         db.session.commit()
+        return "success"
     except Exception as e:
         return str(e)

@@ -38,7 +38,7 @@ class Dashboards(db.Model):
     timestamp = db.Column(db.String())
     instances = db.Column(db.JSON())
 
-    def __init__(self, name, author, entity, hash_code, filters, properties, timestamp):
+    def __init__(self, name, author, entity, hash_code, filters, properties, timestamp, instances):
         self.name = name
         self.author = author
         self.entity = entity
@@ -46,6 +46,7 @@ class Dashboards(db.Model):
         self.filters = filters
         self.properties = properties
         self.timestamp = timestamp
+        self.instances = instances
 
     def __repr__(self):
         return """{
@@ -69,5 +70,6 @@ class Dashboards(db.Model):
             'hash_code': self.hash_code,
             'filters': self.filters,
             'properties': self.properties,
-            'timestamp': self.timestamp
+            'timestamp': self.timestamp,
+            'instances': self.instances
         }

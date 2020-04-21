@@ -39,7 +39,7 @@ def resolve_gini_with_filters_unbounded(entity, filters):
             {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
 
             {SELECT DISTINCT ?item WHERE {
-               ?item wdt:P31 wd:%s .""" % entity
+               ?item wdt:P31 wd:%s . """ % entity
     for elem in filters:
         for elem_filter in elem.keys():
             query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])

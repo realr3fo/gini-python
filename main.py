@@ -86,6 +86,8 @@ def create_dashboard():
         filters = body["filters"]
 
     result = resolve_create_dashboard(entity_id, filters)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
 
 
@@ -119,14 +121,13 @@ def get_properties_info():
     return json.dumps(result)
 
 
-@app.route('/api/properties/gap', methods=['POST'])
+@app.route('/api/properties/gap', methods=['GET'])
 @cross_origin()
 def get_properties_gap():
-    body = request.json
-    if "entities" not in body:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities in body")
-    entities = body["entities"]
-    result = resolve_get_property_gap_api_sandbox(entities)
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    result = resolve_get_property_gap_api_sandbox(hash_code)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
