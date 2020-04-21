@@ -26,63 +26,70 @@ def welcome():
     return "Welcome!"
 
 
-@app.route('/api/gini', methods=['GET'])
-@cross_origin()
-def get_gini():
-    entity = request.args.get('entity')
-    if entity is None or entity == "":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please input the WikiData entity ID in query parameters")
-
-    properties = request.args.get('properties')
-    if properties is None or properties == "[]" or len(properties) == 0:
-        result = resolve_unbounded(entity)
-    else:
-        result = resolve_bounded(entity, properties)
-
-    return json.dumps(result)
-
-
-@app.route('/api/property/gap', methods=['POST'])
-@cross_origin()
-def get_property_gap():
-    entities = request.json
-    if "entities" not in entities:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
-    entities = entities["entities"]
-    if len(entities) == 0:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
-    result = resolve_property_gap(entities)
-    return result
+# @app.route('/api/gini', methods=['GET'])
+# @cross_origin()
+# def get_gini():
+#     entity = request.args.get('entity')
+#     if entity is None or entity == "":
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please input the WikiData entity ID in query parameters")
+#
+#     properties = request.args.get('properties')
+#     if properties is None or properties == "[]" or len(properties) == 0:
+#         from resolver.resolver_old import resolve_unbounded
+#         result = resolve_unbounded(entity)
+#     else:
+#         from resolver.resolver_old import resolve_bounded
+#         result = resolve_bounded(entity, properties)
+#
+#     return json.dumps(result)
 
 
-@app.route('/api/property/analysis', methods=['POST'])
-@cross_origin()
-def get_property_analysis():
-    analysis_type = request.args.get('type')
-    entities = request.json
-    if "entities" not in entities:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
-    entities = entities["entities"]
-    if len(entities) == 0:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
-    if analysis_type == "intersection top intersection bot":
-        result = resolve_property_gap_intersection_top_intersection_bot(entities)
-    elif analysis_type == "union top intersection bot":
-        result = resolve_property_gap_intersection_top_union_bot(entities)
-    else:
-        result = resolve_property_gap_union_top_union_bot(entities)
-    return result
+# @app.route('/api/property/gap', methods=['POST'])
+# @cross_origin()
+# def get_property_gap():
+#     entities = request.json
+#     if "entities" not in entities:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
+#     entities = entities["entities"]
+#     if len(entities) == 0:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
+#     from resolver.resolver_old import resolve_property_gap
+#     result = resolve_property_gap(entities)
+#     return result
 
 
-@app.route('/api/gini/analysis', methods=['GET'])
-@cross_origin()
-def gini_entities_analysis():
-    limit = request.args.get('limit')
-    if limit == "":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include limit")
-    limit = int(limit)
-    result = resolve_gini_analysis(limit)
-    return result
+# @app.route('/api/property/analysis', methods=['POST'])
+# @cross_origin()
+# def get_property_analysis():
+#     analysis_type = request.args.get('type')
+#     entities = request.json
+#     if "entities" not in entities:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entities objects")
+#     entities = entities["entities"]
+#     if len(entities) == 0:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please do not send empty array of entities objects")
+#     if analysis_type == "intersection top intersection bot":
+#         from resolver.resolver_analysis import resolve_property_gap_intersection_top_intersection_bot
+#         result = resolve_property_gap_intersection_top_intersection_bot(entities)
+#     elif analysis_type == "union top intersection bot":
+#         from resolver.resolver_analysis import resolve_property_gap_intersection_top_union_bot
+#         result = resolve_property_gap_intersection_top_union_bot(entities)
+#     else:
+#         from resolver.resolver_analysis import resolve_property_gap_union_top_union_bot
+#         result = resolve_property_gap_union_top_union_bot(entities)
+#     return result
+
+
+# @app.route('/api/gini/analysis', methods=['GET'])
+# @cross_origin()
+# def gini_entities_analysis():
+#     limit = request.args.get('limit')
+#     if limit == "":
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include limit")
+#     limit = int(limit)
+#     from resolver.resolver_analysis import resolve_gini_analysis
+#     result = resolve_gini_analysis(limit)
+#     return result
 
 
 @app.route('/api/entity/gini', methods=['GET', 'POST'])
@@ -133,19 +140,20 @@ def get_filter_suggestions():
     return json.dumps(result)
 
 
-@app.route('/api/property/value/suggestions', methods=['POST'])
-@cross_origin()
-def get_property_value_suggestions():
-    body = request.json
-    if body is None or "entityID" not in body or "propertyID" not in body:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id and propertyID")
-    entity_id = body["entityID"]
-    property_id = body["propertyID"]
-    filters = []
-    if "filters" in body:
-        filters = body["filters"]
-    result = resolve_get_property_value_suggestions(entity_id, property_id, filters)
-    return json.dumps(result)
+# @app.route('/api/property/value/suggestions', methods=['POST'])
+# @cross_origin()
+# def get_property_value_suggestions():
+#     body = request.json
+#     if body is None or "entityID" not in body or "propertyID" not in body:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id and propertyID")
+#     entity_id = body["entityID"]
+#     property_id = body["propertyID"]
+#     filters = []
+#     if "filters" in body:
+#         filters = body["filters"]
+#     from resolver.resolver_unused import resolve_get_property_value_suggestions
+#     result = resolve_get_property_value_suggestions(entity_id, property_id, filters)
+#     return json.dumps(result)
 
 
 @app.route('/api/dashboard', methods=['POST'])
@@ -203,6 +211,13 @@ def get_properties_gap():
     result = resolve_get_property_gap_api_sandbox(entities)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
+@app.route('/api/test/json', methods=['GET'])
+@cross_origin()
+def test_json():
+    result = resolve_test_json()
     return json.dumps(result)
 
 
