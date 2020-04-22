@@ -58,6 +58,7 @@ def resolve_get_property_gap_unbounded_api_sandbox(entities):
             top_entities.append(entity)
         elif entity["percentile"] in ignore_percentages:
             break
+
     top_gap = []
     if len(top_entities) > 50:
         top_random = random.sample(range(len(top_entities)), 50)
@@ -72,14 +73,17 @@ def resolve_get_property_gap_unbounded_api_sandbox(entities):
     entities_string = entities_string[:-3]
     endpoint = "http://wikidata.org/w/api.php?action=wbgetentities&format=json&ids=%s&props=claims&languages=en" % \
                entities_string
+    print("before")
+    print(endpoint)
     response = requests.get(endpoint)
+    print("after")
+
     result_entities = response.json()["entities"]
     top_gap_set = set()
     for single_entity in result_entities.keys():
         single_entity_properties = result_entities[single_entity]["claims"]
         for prop in single_entity_properties.keys():
             top_gap_set.add(prop)
-
     bot_gap = []
     if len(bottom_entities) > 50:
         bottom_random = random.sample(range(len(bottom_entities)), 50)

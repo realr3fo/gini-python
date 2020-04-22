@@ -9,7 +9,7 @@ from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_s
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
     resolve_get_filter_suggestions_result, resolve_get_wikidata_entities_result
-from resolver.resolver_comparison import resolve_get_comparison_gini_result
+from resolver.resolver_comparison import resolve_get_comparison_gini_result, resolve_get_comparison_properties_result
 from resolver.resolver_gini import resolve_gini_with_filters_unbounded, resolve_gini_with_filters_bounded
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
@@ -98,7 +98,10 @@ def resolve_get_properties_info(hash_code):
 
 def resolve_get_property_gap_api_sandbox(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
-    entities = single_dashboard.instances["entities"]
+    instances = single_dashboard.instances
+    if "entities" not in instances:
+        return {"errorMessage", "entities not found"}
+    entities = instances["entities"]
     if len(entities) == 0:
         return {"errorMessage": "list of entities is impty"}
     sample_entity_obj = entities[0]
