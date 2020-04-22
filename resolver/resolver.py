@@ -9,6 +9,7 @@ from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_s
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
     resolve_get_filter_suggestions_result, resolve_get_wikidata_entities_result
+from resolver.resolver_comparison import resolve_get_comparison_gini_result
 from resolver.resolver_gini import resolve_gini_with_filters_unbounded, resolve_gini_with_filters_bounded
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
@@ -144,6 +145,14 @@ def resolve_get_all_profiles():
                        "profileProperties": profile_properties}
         profiles.append(profile_obj)
     result = {"profiles": profiles}
+    return result
+
+
+def resolve_get_comparison_gini(hash_code, item_number):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    result = resolve_get_comparison_gini_result(single_dashboard, item_number)
     return result
 
 

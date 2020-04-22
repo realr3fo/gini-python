@@ -1,5 +1,5 @@
 from resolver.resolver import ENDPOINT_URL, LIMITS
-from resolver.resolver_old import resolve_unbounded, resolve_property_gap
+from resolver.unused.resolver_old import resolve_unbounded, resolve_property_gap
 from utils.wikidata import get_results
 
 
