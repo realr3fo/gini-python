@@ -156,6 +156,14 @@ def resolve_get_comparison_gini(hash_code, item_number):
     return result
 
 
+def resolve_get_comparison_properties(hash_code, item_number):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    result = resolve_get_comparison_properties_result(single_dashboard, item_number)
+    return result
+
+
 def save_dashboard_to_db(data):
     name = data['name']
     author = data['author']

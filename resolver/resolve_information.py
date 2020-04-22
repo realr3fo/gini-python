@@ -75,7 +75,7 @@ def resolve_get_properties_info_result(single_dashboard):
     for elem in entity_filters:
         for elem_filter in elem.keys():
             filter_query_top += "?s wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-            filter_query_bottom += "FILTER(?p != wdt:%s)" % elem_filter
+            filter_query_bottom += "FILTER(?p != wdt:%s) " % elem_filter
     filter_property = ""
     for elem in properties:
         filter_property += "FILTER(?p = wdt:%s)" % elem
