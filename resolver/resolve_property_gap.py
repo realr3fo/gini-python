@@ -2,6 +2,8 @@ import random
 
 import requests
 
+from utils.wikidata import get_results
+
 
 def resolve_get_property_gap_bounded_api_sandbox(entities):
     top_percentages = ["90%", "100%"]
@@ -39,6 +41,7 @@ def resolve_get_property_gap_bounded_api_sandbox(entities):
 
 
 def resolve_get_property_gap_unbounded_api_sandbox(entities):
+    from resolver.resolver import LIMITS, ENDPOINT_URL
     top_percentages = ["90%", "100%"]
     bot_percentages = ["10%", "20%"]
     ignore_percentages = ["30%", "40%", "50%", "60%", "70%", "80%"]
@@ -59,31 +62,35 @@ def resolve_get_property_gap_unbounded_api_sandbox(entities):
         elif entity["percentile"] in ignore_percentages:
             break
 
-    top_gap = []
+    bot_gap = []
     if len(top_entities) > 50:
         top_random = random.sample(range(len(top_entities)), 50)
         for idx in top_random:
-            top_gap.append(top_entities[idx]["entity"])
+            bot_gap.append(top_entities[idx]["entity"])
     else:
         for entity in top_entities:
-            top_gap.append(entity["entity"])
-    entities_string = ""
-    for elem in top_gap:
-        entities_string += elem + "%7C"
-    entities_string = entities_string[:-3]
-    endpoint = "http://wikidata.org/w/api.php?action=wbgetentities&format=json&ids=%s&props=claims&languages=en" % \
-               entities_string
-    print("before")
-    print(endpoint)
-    response = requests.get(endpoint)
-    print("after")
+            bot_gap.append(entity["entity"])
+    bot_entities_string = ""
+    for elem in bot_gap:
+        bot_entities_string += "{wd:%s ?property ?o .} UNION " % elem
+    bot_entities_string = bot_entities_string[:-6]
 
-    result_entities = response.json()["entities"]
+    bot_query = """
+    SELECT DISTINCT ?p {
+    %s
+    FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+      FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
+      ?p wikibase:directClaim ?property .
+    }
+    """ % bot_entities_string
+    query_results = get_results(ENDPOINT_URL, bot_query)
+    property_results = query_results["results"]["bindings"]
     top_gap_set = set()
-    for single_entity in result_entities.keys():
-        single_entity_properties = result_entities[single_entity]["claims"]
-        for prop in single_entity_properties.keys():
-            top_gap_set.add(prop)
+    for prop in property_results:
+        property_link = prop["p"]["value"]
+        property_id = property_link.split("/")[-1]
+        top_gap_set.add(property_id)
+
     bot_gap = []
     if len(bottom_entities) > 50:
         bottom_random = random.sample(range(len(bottom_entities)), 50)
@@ -92,21 +99,27 @@ def resolve_get_property_gap_unbounded_api_sandbox(entities):
     else:
         for entity in bottom_entities:
             bot_gap.append(entity["entity"])
-    entities_string = ""
+    bot_entities_string = ""
     for elem in bot_gap:
-        entities_string += elem + "%7C"
-    entities_string = entities_string[:-3]
-    endpoint = "http://wikidata.org/w/api.php?action=wbgetentities&format=json&ids=%s&props=claims&languages=en" % \
-               entities_string
-    response = requests.get(endpoint)
-    result_entities = response.json()["entities"]
+        bot_entities_string += "{wd:%s ?property ?o .} UNION " % elem
+    bot_entities_string = bot_entities_string[:-6]
+
+    bot_query = """
+        SELECT DISTINCT ?p {
+        %s
+        FILTER(CONTAINS(STR(?property),"http://www.wikidata.org/prop/direct/"))
+          FILTER NOT EXISTS {?p wikibase:propertyType wikibase:ExternalId .}
+          ?p wikibase:directClaim ?property .
+        }
+        """ % bot_entities_string
+    query_results = get_results(ENDPOINT_URL, bot_query)
+    property_results = query_results["results"]["bindings"]
     bot_gap_set = set()
-    for single_entity in result_entities.keys():
-        single_entity_properties = result_entities[single_entity]["claims"]
-        for prop in single_entity_properties.keys():
-            bot_gap_set.add(prop)
+    for prop in property_results:
+        property_link = prop["p"]["value"]
+        property_id = property_link.split("/")[-1]
+        bot_gap_set.add(property_id)
 
     result_properties = list(top_gap_set.difference(bot_gap_set))
-
     result = {"properties": result_properties}
     return result
