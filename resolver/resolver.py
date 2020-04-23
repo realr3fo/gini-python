@@ -4,6 +4,7 @@ import uuid
 
 from main import db
 from models.models import Dashboards
+from resolver.resolve_analysis import resolve_get_analysis_information_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result
 from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
     resolve_get_property_gap_unbounded_api_sandbox
@@ -58,6 +59,10 @@ def resolve_edit_dashboard(data):
     entity_compare_filters = single_dashboard.compare_filters
     entity_analysis_filters = single_dashboard.analysis_filters
 
+    if "name" in data:
+        entity_name = data["name"]
+    if "author" in data:
+        entity_author = data["author"]
     if "entityID" in data:
         entity_id = str(data["entityID"])
     if "filters" in data:
@@ -70,6 +75,8 @@ def resolve_edit_dashboard(data):
         entity_compare_filters = str(data["compareFilters"])
     if "analysisFilters" in data:
         entity_analysis_filters = str(data["analysisFilters"])
+    single_dashboard.name = entity_name
+    single_dashboard.author = entity_author
     single_dashboard.entity = entity_id
     single_dashboard.filters = entity_filters
     single_dashboard.properties = entity_properties
@@ -88,7 +95,15 @@ def resolve_edit_dashboard(data):
 
 def resolve_get_entity_information(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
-    return resolve_get_entity_information_result(single_dashboard)
+    result = resolve_get_entity_information_result(single_dashboard)
+    entity_info = result["entity"]
+    filters_info = result["filters"]
+    properties_info = result["properties"]
+    single_dashboard.entity_info = entity_info
+    single_dashboard.filters_info = filters_info
+    single_dashboard.properties_info = properties_info
+    db.session.commit()
+    return result
 
 
 def resolve_get_properties_info(hash_code):
@@ -140,13 +155,15 @@ def resolve_get_all_profiles():
     dashboards = Dashboards.query.all()
     profiles = []
     for dashboard in dashboards:
-        entity_id = dashboard.entity
-        profile_hash_code = dashboard.hash_code
-        profile_filters = dashboard.filters
-        profile_properties = dashboard.properties
-        profile_obj = {"entityID": entity_id, "profileHashCode": profile_hash_code, "profileFilters": profile_filters,
-                       "profileProperties": profile_properties}
-        profiles.append(profile_obj)
+        dashboard_data = dashboard.serialize()
+        del dashboard_data['id']
+        del dashboard_data['instances']
+        for elem in dashboard_data.keys():
+            try:
+                dashboard_data[elem] = eval(dashboard_data[elem])
+            except Exception as e:
+                print(e)
+        profiles.append(dashboard_data)
     result = {"profiles": profiles}
     return result
 
@@ -164,6 +181,14 @@ def resolve_get_comparison_properties(hash_code, item_number):
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
     result = resolve_get_comparison_properties_result(single_dashboard, item_number)
+    return result
+
+
+def resolve_get_analysis_information(hash_code, property_id):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    result = resolve_get_analysis_information_result(single_dashboard, property_id)
     return result
 
 
