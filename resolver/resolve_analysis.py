@@ -42,7 +42,7 @@ def resolve_get_gini_analysis_result(single_dashboard, property_id, entity_analy
     from resolver.resolver import LIMITS, ENDPOINT_URL
     from resolver.resolver_gini import get_insight, get_ten_percentile
     entity_id = single_dashboard.entity
-    filters = single_dashboard.filters
+    filters = eval(single_dashboard.filters)
     filter_query = ""
     for elem in filters:
         for elem_filter in elem.keys():
@@ -106,7 +106,7 @@ def resolve_get_gini_analysis_result(single_dashboard, property_id, entity_analy
     return result
 
 
-def resolve_get_property_analysis_result(single_dashboard, property_id, entity_id):
+def resolve_get_property_analysis_result(single_dashboard, property_id, entity_analysis_id):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
     properties = eval(single_dashboard.properties)
@@ -118,7 +118,7 @@ def resolve_get_property_analysis_result(single_dashboard, property_id, entity_i
         for elem_filter in elem.keys():
             filter_query_top += "?s wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
             filter_query_bottom += "FILTER(?p != wdt:%s) " % elem_filter
-    filter_query_top += " ?s wdt:%s %s . " % (property_id, entity_id)
+    filter_query_top += " ?s wdt:%s wd:%s . " % (property_id, entity_analysis_id)
     filter_property = ""
     for elem in properties:
         filter_property += "FILTER(?p = wdt:%s)" % elem
