@@ -161,7 +161,7 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
     # property_gap = get_property_gap(chunked_q_arr)
-    result = {"insight": insight, "limit": LIMITS,
+    result = {"insight": insight, "limit": LIMITS, "amount": sum(each_amount),
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "percentileData": percentiles,
               "data": data, "entities": entities}

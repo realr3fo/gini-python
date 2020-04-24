@@ -201,5 +201,40 @@ def get_analysis_information():
     return json.dumps(result)
 
 
+@app.route('/api/entity/gini/analysis', methods=['GET'])
+@cross_origin()
+def get_gini_analysis():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
+    property_id = request.args.get("property_id")
+    if property_id == "" or property_id is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include property id")
+    entity_id = request.args.get("entity_id")
+    if entity_id == "" or entity_id is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
+    result = resolve_get_gini_analysis(hash_code, property_id, entity_id)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
+@app.route('/api/property/analysis', methods=['GET'])
+@cross_origin()
+def get_property_analysis():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
+    property_id = request.args.get("property_id")
+    if property_id == "" or property_id is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include property id")
+    entity_id = request.args.get("entity_id")
+    if entity_id == "" or entity_id is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
+    result = resolve_get_property_analysis(hash_code, property_id, entity_id)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
 if __name__ == '__main__':
     app.run(debug=True)
