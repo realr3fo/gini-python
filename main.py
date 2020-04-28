@@ -236,5 +236,18 @@ def get_property_analysis():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
 
+
+@app.route('/api/entities/count', methods=['GET'])
+@cross_origin()
+def get_entities_count():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
+    result = resolve_get_entities_count(hash_code)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
