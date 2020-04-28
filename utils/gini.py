@@ -57,6 +57,9 @@ def get_cumulative_data_and_entities(chunked_q_arr):
                           "entityLink": single_tuple[3]}
             if len(single_tuple) == 5:
                 entity_obj["entityProperties"] = single_tuple[4]
+            if len(single_tuple) == 6:
+                entity_obj["entityProperties"] = single_tuple[4]
+                entity_obj["hasProperty"] = single_tuple[5]
             entities.append(entity_obj)
 
         percentile_counter += 1

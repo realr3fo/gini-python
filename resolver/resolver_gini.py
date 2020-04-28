@@ -33,29 +33,33 @@ def get_each_amount_bounded(chunked_q_arr):
     return result
 
 
-def resolve_gini_with_filters_unbounded(entity, filters):
-    query = """
-        SELECT ?item ?itemLabel ?cnt {
-            {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
-
-            {SELECT DISTINCT ?item WHERE {
-               ?item wdt:P31 wd:%s . """ % entity
+def resolve_gini_with_filters_unbounded(entity, filters, has_property):
+    from resolver.resolver import LIMITS, ENDPOINT_URL
+    filter_query = ""
     for elem in filters:
         for elem_filter in elem.keys():
-            query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-    from resolver.resolver import LIMITS
-    query += """
+            filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+    has_property_query = ""
+    if has_property != "" and has_property is not None:
+        has_property_query += " OPTIONAL { ?item wdt:%s _:v1 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
+    query = """
+        SELECT ?item ?itemLabel ?cnt ?p1 {
+            {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
+
+            {SELECT DISTINCT ?item WHERE {
+               ?item wdt:P31 wd:%s .
+               %s
             } LIMIT %d}
             OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
             ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
-
-            } GROUP BY ?item}
+            %s
+            
+            } GROUP BY ?item ?p1}
 
             SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
 
             } ORDER BY DESC(?cnt)
-        """ % LIMITS["unbounded"]
-    from resolver.resolver import ENDPOINT_URL
+        """ % (entity, filter_query, LIMITS["unbounded"], has_property_query)
     query_results = get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     if len(item_arr) == 0:
@@ -68,9 +72,15 @@ def resolve_gini_with_filters_unbounded(entity, filters):
         item_id = item_link.split("/")[-1]
         property_count = int(elem['cnt']['value'])
         item_label = elem['itemLabel']['value']
-        entity_obj = (item_id, property_count, item_label, item_link)
+        item_has_property = None
+        if 'p1' in elem:
+            item_has_property = elem['p1']['value']
+            if item_has_property == '1':
+                item_has_property = True
+            else:
+                item_has_property = False
+        entity_obj = (item_id, property_count, item_label, item_link, item_has_property)
         q_arr.append(entity_obj)
-
     q_arr = sorted(q_arr, key=lambda x: x[1])
     gini_coefficient = calculate_gini(q_arr)
     gini_coefficient = round(gini_coefficient, 3)
@@ -97,7 +107,7 @@ def resolve_gini_with_filters_unbounded(entity, filters):
     return result
 
 
-def resolve_gini_with_filters_bounded(entity_id, filters, properties):
+def resolve_gini_with_filters_bounded(entity_id, filters, properties, has_property):
     properties = properties
     new_properties = []
     for elem in properties:
@@ -112,11 +122,11 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
         for elem_filter in elem.keys():
             filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
 
-    query = "SELECT DISTINCT ?item ?itemLabel "
+    query = "SELECT DISTINCT ?item ?itemLabel ?p1 "
     for elem in properties:
         query += "?%s " % elem
     query += "(?%s AS ?count) {" % jml_join
-    query += "{ SELECT ?item "
+    query += "{ SELECT ?item ?p1 "
     for elem in properties:
         query += "?%s " % elem
     from resolver.resolver import LIMITS
@@ -126,6 +136,8 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
         query += "OPTIONAL { ?item wdt:%s _:v%d . BIND (1 AS ?%s) } " % (properties[i], i, properties[i])
     for elem in properties:
         query += "OPTIONAL { BIND (0 AS ?%s) } " % elem
+    if has_property != "" and has_property is not None:
+        query += " OPTIONAL { ?item wdt:%s _:v-0 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
     query += """}} SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
     from resolver.resolver import ENDPOINT_URL
     query_results = get_results(ENDPOINT_URL, query)
@@ -140,7 +152,14 @@ def resolve_gini_with_filters_bounded(entity_id, filters, properties):
             if elem[prop]["value"] == "1":
                 entity_props.append(prop)
         item_label = elem["itemLabel"]["value"]
-        entity_obj = (item_id, property_count, item_label, item_link, entity_props)
+        item_has_property = None
+        if 'p1' in elem:
+            item_has_property = elem['p1']['value']
+            if item_has_property == '1':
+                item_has_property = True
+            else:
+                item_has_property = False
+        entity_obj = (item_id, property_count, item_label, item_link, entity_props, item_has_property)
         q_arr.append(entity_obj)
     q_arr = sorted(q_arr, key=lambda x: x[1])
 

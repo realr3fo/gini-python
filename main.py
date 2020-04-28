@@ -33,7 +33,8 @@ def get_gini_with_filters():
         hash_code = request.args.get('hash_code')
         if hash_code == "" or hash_code is None:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
-        result = resolve_get_entity_gini_by_hash(hash_code)
+        prop = request.args.get('property')
+        result = resolve_get_entity_gini_by_hash(hash_code, prop)
         if "errorMessage" in result:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
         return json.dumps(result)

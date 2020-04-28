@@ -128,7 +128,7 @@ def resolve_get_property_gap_api_sandbox(hash_code):
         return resolve_get_property_gap_unbounded_api_sandbox(entities)
 
 
-def resolve_get_entity_gini_by_hash(hash_code):
+def resolve_get_entity_gini_by_hash(hash_code, prop):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
@@ -136,15 +136,16 @@ def resolve_get_entity_gini_by_hash(hash_code):
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
     properties = eval(single_dashboard.properties)
+    has_property = prop
 
     if len(properties) == 0:
-        result = resolve_gini_with_filters_unbounded(entity_id, filters)
+        result = resolve_gini_with_filters_unbounded(entity_id, filters, has_property)
         entities = {"entities": result["entities"]}
         json_entities = json.loads(json.dumps(entities))
         single_dashboard.instances = json_entities
         db.session.commit()
     else:
-        result = resolve_gini_with_filters_bounded(entity_id, filters, properties)
+        result = resolve_gini_with_filters_bounded(entity_id, filters, properties, has_property)
         entities = {"entities": result["entities"]}
         json_entities = json.loads(json.dumps(entities))
         single_dashboard.instances = json_entities
