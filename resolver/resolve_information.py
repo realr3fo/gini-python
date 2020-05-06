@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 from utils.wikidata import get_results
@@ -124,3 +126,14 @@ def resolve_get_properties_info_result(single_dashboard):
 
     result = {"properties": properties_result}
     return result
+
+
+def resolve_get_dashboard_info_result(single_dashboard):
+    single_dashboard_data = single_dashboard.serialize()
+    del single_dashboard_data["instances"]
+    for key in single_dashboard_data.keys():
+        try:
+            single_dashboard_data[key] = eval(single_dashboard_data[key])
+        except (TypeError, SyntaxError, NameError):
+            continue
+    return single_dashboard_data
