@@ -104,14 +104,14 @@ def edit_dashboard():
     return json.dumps(result)
 
 
-@app.route('/api/entity/information', methods=['GET'])
-@cross_origin()
-def get_entity_information():
-    hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
-    result = resolve_get_entity_information(hash_code)
-    return json.dumps(result)
+# @app.route('/api/entity/information', methods=['GET'])
+# @cross_origin()
+# def get_entity_information():
+#     hash_code = request.args.get("hash_code")
+#     if hash_code == "" or hash_code is None:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+#     result = resolve_get_entity_information(hash_code)
+#     return json.dumps(result)
 
 
 @app.route('/api/entity/gini', methods=['GET'])
@@ -249,6 +249,7 @@ def get_entities_count():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
 
+
 @app.route('/api/dashboard/info', methods=['GET'])
 @cross_origin()
 def get_dashboard_info():
@@ -259,6 +260,7 @@ def get_dashboard_info():
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

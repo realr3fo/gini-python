@@ -96,19 +96,6 @@ def resolve_edit_dashboard(data):
     return result
 
 
-def resolve_get_entity_information(hash_code):
-    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
-    result = resolve_get_entity_information_result(single_dashboard)
-    entity_info = result["entity"]
-    filters_info = result["filters"]
-    properties_info = result["properties"]
-    single_dashboard.entity_info = entity_info
-    single_dashboard.filters_info = filters_info
-    single_dashboard.properties_info = properties_info
-    db.session.commit()
-    return result
-
-
 def resolve_get_properties_info(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     return resolve_get_properties_info_result(single_dashboard)
@@ -222,6 +209,14 @@ def resolve_get_entities_count(hash_code):
 
 def resolve_get_dashboard_info(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    result = resolve_get_entity_information_result(single_dashboard)
+    entity_info = result["entity"]
+    filters_info = result["filters"]
+    properties_info = result["properties"]
+    single_dashboard.entity_info = entity_info
+    single_dashboard.filters_info = filters_info
+    single_dashboard.properties_info = properties_info
+    db.session.commit()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
     result = resolve_get_dashboard_info_result(single_dashboard)
