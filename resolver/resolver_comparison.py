@@ -71,7 +71,7 @@ def resolve_get_comparison_gini_unbounded(data):
     result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
               "each_amount": each_amount,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
-              "insight": insight, "entities": entities}
+              "insight": insight}
     return result
 
 
@@ -150,7 +150,7 @@ def resolve_get_comparison_gini_bounded(data):
     result = {"insight": insight, "limit": LIMITS,
               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
               "percentileData": percentiles,
-              "data": data, "entities": entities}
+              "data": data}
     return result
 
 
@@ -239,5 +239,4 @@ def resolve_get_comparison_properties_result(single_dashboard, item_number):
         properties_result.append(property_obj)
 
     result = {"properties": properties_result}
-    return result
     return result
