@@ -91,8 +91,7 @@ def resolve_edit_dashboard(data):
         single_dashboard.instances = {}
 
     db.session.commit()
-    updated_dashboard = single_dashboard.serialize()
-    result = {"result": updated_dashboard}
+    result = {"result": "success"}
     return result
 
 
