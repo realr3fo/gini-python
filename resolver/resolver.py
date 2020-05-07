@@ -152,9 +152,10 @@ def resolve_get_all_profiles():
         for elem in dashboard_data.keys():
             try:
                 dashboard_data[elem] = eval(dashboard_data[elem])
-            except Exception as e:
-                print(e)
+            except Exception:
+                pass
         profiles.append(dashboard_data)
+
     result = {"profiles": profiles}
     return result
 
@@ -212,11 +213,12 @@ def resolve_get_dashboard_info(hash_code):
 
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_dashboard_info_result(single_dashboard)
     entity_info = resolve_get_entity_information_result(single_dashboard)
-    result["entityInfo"] = entity_info["entity"]
-    result["filtersInfo"] = entity_info["filters"]
-    result["properties_info"] = entity_info["properties"]
+    single_dashboard.entity_info = entity_info["entity"]
+    single_dashboard.filtersInfo = entity_info["filters"]
+    single_dashboard.properties_info = entity_info["properties"]
+    db.session.commit()
+    result = resolve_get_dashboard_info_result(single_dashboard)
     compare_info = resolve_get_compare_filters_info_result(single_dashboard)
     result["compareInfo"] = compare_info
 

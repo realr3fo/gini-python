@@ -40,6 +40,9 @@ class Dashboards(db.Model):
     compare_filters = db.Column(db.String(), default="[]")
     analysis_filters = db.Column(db.String(), default="[]")
     additional_filters = db.Column(db.String(), default="[]")
+    entity_info = db.Column(db.JSON(), default={})
+    filters_info = db.Column(db.JSON(), default={})
+    properties_info = db.Column(db.JSON(), default={})
 
     def __init__(self, name, author, entity, hash_code, timestamp):
         self.name = name
@@ -75,4 +78,7 @@ class Dashboards(db.Model):
             'compareFilters': self.compare_filters,
             'analysisFilters': self.analysis_filters,
             'additionalFilters': self.additional_filters,
+            "entityInfo": self.entity_info,
+            "filtersInfo": self.filters_info,
+            "propertiesInfo": self.properties_info
         }
