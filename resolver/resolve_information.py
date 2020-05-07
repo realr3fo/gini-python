@@ -129,12 +129,12 @@ def resolve_get_properties_info_compare_result(single_dashboard, item_number):
         item_val = item_filter["value"][current_item]
         filter_obj = {prop: item_val}
         compare_filters_item.append(filter_obj)
-    properties_result = get_properties_binding(entity_id, entity_filters, properties, compare_filters_item)
+    properties_result = get_properties_binding(entity_id, entity_filters, properties, compare_filters_item, item_number)
     result = properties_result
     return result
 
 
-def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None):
+def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None, item_num=None):
     properties_result = {"result": {}}
     filter_query_top = ""
     filter_query_bottom = ""
@@ -185,8 +185,11 @@ def get_properties_binding(entity_id, entity_filters, properties, compare_item_f
         property_id = property_link.split("/")[-1]
         property_label = prop["pFullLabel"]["value"]
         property_entities_count = prop["cnt"]["value"]
+        count_key = "count"
+        if item_num is not None:
+            count_key += item_num
         property_obj = {"id": property_id, "label": property_label,
                         "link": property_link,
-                        "count": property_entities_count}
+                        count_key: property_entities_count}
         properties_result["result"][property_id] = property_obj
     return properties_result
