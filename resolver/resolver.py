@@ -215,7 +215,7 @@ def resolve_get_dashboard_info(hash_code):
         return {"errorMessage": "data with the given hash code was not found"}
     entity_info = resolve_get_entity_information_result(single_dashboard)
     single_dashboard.entity_info = entity_info["entity"]
-    single_dashboard.filtersInfo = entity_info["filters"]
+    single_dashboard.filters_info = entity_info["filters"]
     single_dashboard.properties_info = entity_info["properties"]
     db.session.commit()
     result = resolve_get_dashboard_info_result(single_dashboard)
