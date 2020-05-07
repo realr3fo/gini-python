@@ -8,7 +8,8 @@ from resolver.resolve_analysis import resolve_get_analysis_information_result, r
     resolve_get_property_analysis_result
 from resolver.resolve_card import resolve_get_entities_count_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
-    resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result
+    resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result, \
+    resolve_get_compare_filters_info_result
 from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
@@ -208,17 +209,17 @@ def resolve_get_entities_count(hash_code):
 
 def resolve_get_dashboard_info(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
-    result = resolve_get_entity_information_result(single_dashboard)
-    entity_info = result["entity"]
-    filters_info = result["filters"]
-    properties_info = result["properties"]
-    single_dashboard.entity_info = entity_info
-    single_dashboard.filters_info = filters_info
-    single_dashboard.properties_info = properties_info
-    db.session.commit()
+
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
     result = resolve_get_dashboard_info_result(single_dashboard)
+    entity_info = resolve_get_entity_information_result(single_dashboard)
+    result["entityInfo"] = entity_info["entity"]
+    result["filtersInfo"] = entity_info["filters"]
+    result["properties_info"] = entity_info["properties"]
+    compare_info = resolve_get_compare_filters_info_result(single_dashboard)
+    result["compareInfo"] = compare_info
+
     return result
 
 

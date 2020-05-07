@@ -66,6 +66,36 @@ def resolve_get_entity_information_result(single_dashboard):
     return result
 
 
+def resolve_get_item_info_sandbox(item_id):
+    wikidata_url = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&ids=%s&props=labels" \
+                   "%%7Cdescriptions&languages=en" % item_id
+    wikidata_result = requests.get(wikidata_url)
+    wikidata_result = wikidata_result.json()
+    objects = wikidata_result["entities"]
+    label = objects[item_id]["labels"]["en"]["value"]
+    description = objects[item_id]["descriptions"]["en"]["value"]
+    result = {"id": item_id, "label": label, "description": description}
+    return result
+
+
+def resolve_get_compare_filters_info_result(single_dashboard):
+    compare_filters = eval(single_dashboard.compare_filters)
+    compare_infos = []
+    for compare_filter in compare_filters:
+        prop = compare_filter['propertyID']
+        item1 = compare_filter['value']['item1']
+        item2 = compare_filter['value']['item2']
+        prop_info = resolve_get_item_info_sandbox(prop)
+        item_1_info = resolve_get_item_info_sandbox(item1)
+        item_2_info = resolve_get_item_info_sandbox(item2)
+        prop_info["value"] = {}
+        prop_info["value"]["item1"] = item_1_info
+        prop_info["value"]["item2"] = item_2_info
+        compare_infos.append(prop_info)
+    result = compare_infos
+    return result
+
+
 def resolve_get_properties_info_result(single_dashboard):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
