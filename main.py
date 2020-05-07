@@ -281,5 +281,18 @@ def get_dashboard_info():
     return json.dumps(result)
 
 
+@app.route('/api/properties/info/compare', methods=['GET'])
+@cross_origin()
+def get_properties_info_compare():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    item_number = request.args.get("item")
+    if item_number == "" or item_number is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item number")
+    result = resolve_get_properties_info_compare(hash_code, item_number)
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

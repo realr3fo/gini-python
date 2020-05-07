@@ -8,7 +8,7 @@ from resolver.resolve_analysis import resolve_get_analysis_information_result, r
     resolve_get_property_analysis_result
 from resolver.resolve_card import resolve_get_entities_count_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
-    resolve_get_dashboard_info_result
+    resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result
 from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
@@ -220,6 +220,13 @@ def resolve_get_dashboard_info(hash_code):
         return {"errorMessage": "data with the given hash code was not found"}
     result = resolve_get_dashboard_info_result(single_dashboard)
     return result
+
+
+def resolve_get_properties_info_compare(hash_code, item_number):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    return resolve_get_properties_info_compare_result(single_dashboard, item_number)
 
 
 def save_dashboard_to_db(data):

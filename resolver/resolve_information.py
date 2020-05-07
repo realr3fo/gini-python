@@ -70,61 +70,9 @@ def resolve_get_properties_info_result(single_dashboard):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
     properties = eval(single_dashboard.properties)
-    properties_result = []
 
-    filter_query_top = ""
-    filter_query_bottom = ""
-    for elem in entity_filters:
-        for elem_filter in elem.keys():
-            filter_query_top += "?s wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-            filter_query_bottom += "FILTER(?p != wdt:%s) " % elem_filter
-    filter_property = ""
-    for elem in properties:
-        filter_property += "FILTER(?p = wdt:%s)" % elem
-    query = """
-    SELECT ?pFull ?pFullLabel ?pDescription ?cnt {
-      ?pFull wikibase:directClaim ?p .
-      MINUS {?pFull <http://wikiba.se/ontology#propertyType> <http://wikiba.se/ontology#ExternalId>}
-      {
-        SELECT ?p (COUNT(?s) AS ?cnt) {
-         SELECT DISTINCT ?s ?p WHERE {
-            {SELECT DISTINCT ?s {
-              { SELECT ?s WHERE {
-                ?s wdt:P31 wd:%s.
-                %s
-              } LIMIT 10000 }
-            }}
-            OPTIONAL {
-              ?s ?p ?o .
-              FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
-            }
-           FILTER(?p != wdt:P31)
-           FILTER(?p != wdt:P373)
-           %s
-           %s
-          }
-        } GROUP BY ?p
-      }
-      ?pFull  schema:description ?pDescription.
-      FILTER(LANG(?pDescription)="en")
-      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
-} ORDER BY DESC(?cnt)
-    """ % (entity_id, filter_query_top, filter_query_bottom, filter_property)
-    from resolver.resolver import ENDPOINT_URL
-    query_results = get_results(ENDPOINT_URL, query)
-    properties_bindings = query_results["results"]["bindings"]
-    for prop in properties_bindings:
-        property_link = prop["pFull"]["value"]
-        property_id = property_link.split("/")[-1]
-        property_label = prop["pFullLabel"]["value"]
-        property_description = prop["pDescription"]["value"]
-        property_entities_count = prop["cnt"]["value"]
-        property_obj = {"propertyID": property_id, "propertyLabel": property_label,
-                        "propertyDescription": property_description, "propertyLink": property_link,
-                        "entitiesCount": property_entities_count}
-        properties_result.append(property_obj)
-
-    result = {"properties": properties_result}
+    properties_result = get_properties_binding(entity_id, entity_filters, properties)
+    result = properties_result
     return result
 
 
@@ -137,3 +85,78 @@ def resolve_get_dashboard_info_result(single_dashboard):
         except (TypeError, SyntaxError, NameError):
             continue
     return single_dashboard_data
+
+
+def resolve_get_properties_info_compare_result(single_dashboard, item_number):
+    entity_id = single_dashboard.entity
+    entity_filters = eval(single_dashboard.filters)
+    properties = eval(single_dashboard.properties)
+    compare_filters = eval(single_dashboard.compare_filters)
+    current_item = "item%s" % item_number
+    compare_filters_item = []
+    for item_filter in compare_filters:
+        prop = item_filter["propertyID"]
+        item_val = item_filter["value"][current_item]
+        filter_obj = {prop: item_val}
+        compare_filters_item.append(filter_obj)
+    properties_result = get_properties_binding(entity_id, entity_filters, properties, compare_filters_item)
+    result = properties_result
+    return result
+
+
+def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None):
+    properties_result = {"result": {}}
+    filter_query_top = ""
+    filter_query_bottom = ""
+    for elem in entity_filters:
+        for elem_filter in elem.keys():
+            filter_query_top += "?s wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+            filter_query_bottom += "FILTER(?p != wdt:%s) " % elem_filter
+    if compare_item_filters is not None:
+        for elem in compare_item_filters:
+            for elem_filter in elem.keys():
+                filter_query_top += "?s wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+                filter_query_bottom += "FILTER(?p != wdt:%s) " % elem_filter
+    filter_property = ""
+    for elem in properties:
+        filter_property += "FILTER(?p = wdt:%s)" % elem
+    query = """
+            SELECT ?pFull ?pFullLabel ?cnt {
+              ?pFull wikibase:directClaim ?p .
+              MINUS {?pFull <http://wikiba.se/ontology#propertyType> <http://wikiba.se/ontology#ExternalId>}
+              {
+                SELECT ?p (COUNT(?s) AS ?cnt) {
+                 SELECT DISTINCT ?s ?p WHERE {
+                    {SELECT DISTINCT ?s {
+                      { SELECT ?s WHERE {
+                        ?s wdt:P31 wd:%s.
+                        %s
+                      } LIMIT 10000 }
+                    }}
+                    OPTIONAL {
+                      ?s ?p ?o .
+                      FILTER(STRSTARTS(STR(?p),"http://www.wikidata.org/prop/direct/")) # only select direct statements
+                    }
+                   FILTER(?p != wdt:P31)
+                   FILTER(?p != wdt:P373)
+                   %s
+                   %s
+                  }
+                } GROUP BY ?p
+              }
+              SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } # get labels
+        } ORDER BY DESC(?cnt)
+            """ % (entity_id, filter_query_top, filter_query_bottom, filter_property)
+    from resolver.resolver import ENDPOINT_URL
+    query_results = get_results(ENDPOINT_URL, query)
+    properties_bindings = query_results["results"]["bindings"]
+    for prop in properties_bindings:
+        property_link = prop["pFull"]["value"]
+        property_id = property_link.split("/")[-1]
+        property_label = prop["pFullLabel"]["value"]
+        property_entities_count = prop["cnt"]["value"]
+        property_obj = {"id": property_id, "label": property_label,
+                        "link": property_link,
+                        "count": property_entities_count}
+        properties_result["result"][property_id] = property_obj
+    return properties_result
