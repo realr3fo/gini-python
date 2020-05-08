@@ -36,8 +36,8 @@ def get_each_amount_bounded(chunked_q_arr):
 
 async def get_gini_from_wikidata(entity, filter_query, has_property_query, offset_count):
     from resolver.resolver import LIMITS, ENDPOINT_URL
-    limit = 5000
-    offset = offset_count * 5000
+    limit = 3000
+    offset = offset_count * 3000
     query = """
             SELECT ?item ?itemLabel ?cnt ?p1 {
                 {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
