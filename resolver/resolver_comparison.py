@@ -62,6 +62,15 @@ def resolve_get_comparison_gini_unbounded(data):
     for arr in chunked_q_arr:
         each_amount.append(len(arr))
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    from collections import Counter
+    property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))
+    histogram_data = [count for _, count in property_counts.items()]
+    if len(histogram_data) > 10:
+        chunked_histogram_arr = get_chunked_arr(histogram_data)
+        histogram_data = []
+        for elem in chunked_histogram_arr:
+            histogram_data.append(sum(elem))
+    histogram_data.insert(0, 0)
     original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
@@ -69,7 +78,7 @@ def resolve_get_comparison_gini_unbounded(data):
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
     result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
-              "each_amount": each_amount,
+              "each_amount": each_amount, "histogramData": histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight}
     return result
