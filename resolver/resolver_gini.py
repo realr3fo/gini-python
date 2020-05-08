@@ -130,7 +130,7 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
               "each_amount": each_amount, "histogramData": histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
-              "insight": insight, "entities": entities}
+              "insight": insight, "entities": []}
     return result
 
 
