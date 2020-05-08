@@ -36,8 +36,8 @@ def get_each_amount_bounded(chunked_q_arr):
 
 async def get_gini_from_wikidata(entity, filter_query, has_property_query, offset_count):
     from resolver.resolver import LIMITS, ENDPOINT_URL
-    limit = 3000
-    offset = offset_count * 3000
+    limit = 5000
+    offset = offset_count * 5000
     query = """
             SELECT ?item ?itemLabel ?cnt ?p1 {
                 {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
@@ -73,7 +73,7 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     asyncio.set_event_loop(loop)
     tasks = []
     # create instance of Semaphore
-    for i in range(15):
+    for i in range(10):
         task = loop.create_task(get_gini_from_wikidata(entity, filter_query, has_property_query, i))
         tasks.append(task)
     query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
