@@ -1,7 +1,8 @@
+import asyncio
 import math
 
 from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data
-from utils.wikidata import get_results
+from utils.wikidata import get_results, async_get_results
 
 
 def get_insight(data):
@@ -33,6 +34,32 @@ def get_each_amount_bounded(chunked_q_arr):
     return result
 
 
+async def get_gini_from_wikidata(entity, filter_query, has_property_query, offset_count):
+    from resolver.resolver import LIMITS, ENDPOINT_URL
+    limit = 7000
+    offset = offset_count * 7000
+    query = """
+            SELECT ?item ?itemLabel ?cnt ?p1 {
+                {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
+
+                {SELECT DISTINCT ?item WHERE {
+                   ?item wdt:P31 wd:%s .
+                   %s
+                } LIMIT %d OFFSET %d}
+                OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+                ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
+                %s
+
+                } GROUP BY ?item ?p1}
+
+                SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+
+                } ORDER BY DESC(?cnt)
+            """ % (entity, filter_query, limit, offset, has_property_query)
+    query_results = await async_get_results(ENDPOINT_URL, query)
+    return query_results["results"]["bindings"]
+
+
 def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     from resolver.resolver import LIMITS, ENDPOINT_URL
     filter_query = ""
@@ -42,26 +69,17 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     has_property_query = ""
     if has_property != "" and has_property is not None:
         has_property_query += " OPTIONAL { ?item wdt:%s _:v1 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
-    query = """
-        SELECT ?item ?itemLabel ?cnt ?p1 {
-            {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
-
-            {SELECT DISTINCT ?item WHERE {
-               ?item wdt:P31 wd:%s .
-               %s
-            } LIMIT %d}
-            OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
-            ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
-            %s
-            
-            } GROUP BY ?item ?p1}
-
-            SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-
-            } ORDER BY DESC(?cnt)
-        """ % (entity, filter_query, LIMITS["unbounded"], has_property_query)
-    query_results = get_results(ENDPOINT_URL, query)
-    item_arr = query_results["results"]["bindings"]
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = []
+    # create instance of Semaphore
+    for i in range(15):
+        task = loop.create_task(get_gini_from_wikidata(entity, filter_query, has_property_query, i))
+        tasks.append(task)
+    query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
+    loop.close()
+    query_results_bindings = [item for sublist in query_results_arr for item in sublist]
+    item_arr = query_results_bindings
     if len(item_arr) == 0:
         result = {
             "gini": 0, "data": [], "entities": []}

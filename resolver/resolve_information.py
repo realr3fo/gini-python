@@ -3,7 +3,7 @@ import asyncio
 
 import requests
 
-from utils.wikidata import get_results
+from utils.wikidata import get_results, async_get_results
 
 
 def resolve_get_entity_information_result(single_dashboard):
@@ -104,6 +104,7 @@ def resolve_get_properties_info_result(single_dashboard):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     properties_result = loop.run_until_complete(get_properties_binding(entity_id, entity_filters, properties))
+    loop.close()
     result = properties_result
     return result
 
@@ -136,9 +137,9 @@ def resolve_get_properties_info_compare_result(single_dashboard):
         compare_filters_item_2.append(filter_obj_2)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    properties_result_1, properties_result_2 = loop.run_until_complete(
-        asyncio.gather(get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_1),
-                       get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_2)))
+    task_1 = loop.create_task(get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_1))
+    task_2 = loop.create_task(get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_2))
+    properties_result_1, properties_result_2 = loop.run_until_complete(asyncio.gather(task_1, task_2))
     prop_result = []
     properties_result_1 = properties_result_1["result"]
     properties_result_2 = properties_result_2["result"]
@@ -167,13 +168,12 @@ def resolve_get_properties_info_compare_result(single_dashboard):
             prop_obj = {"id": prop_id, "label": prop_label, "link": prop_link, "count1": prop_1_count,
                         "count2": prop_2_count}
             prop_result.append(prop_obj)
-
+    loop.close()
     result = {"result": prop_result}
     return result
 
 
 async def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None):
-    await asyncio.sleep(0)
     properties_result = {"result": {}}
     filter_query_top = ""
     filter_query_bottom = ""
@@ -217,7 +217,7 @@ async def get_properties_binding(entity_id, entity_filters, properties, compare_
         } ORDER BY DESC(?cnt)
             """ % (entity_id, filter_query_top, filter_query_bottom, filter_property)
     from resolver.resolver import ENDPOINT_URL
-    query_results = get_results(ENDPOINT_URL, query)
+    query_results = await async_get_results(ENDPOINT_URL, query)
     properties_bindings = query_results["results"]["bindings"]
     for prop in properties_bindings:
         property_link = prop["pFull"]["value"]
