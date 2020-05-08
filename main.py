@@ -287,10 +287,7 @@ def get_properties_info_compare():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
-    item_number = request.args.get("item")
-    if item_number == "" or item_number is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item number")
-    result = resolve_get_properties_info_compare(hash_code, item_number)
+    result = resolve_get_properties_info_compare(hash_code)
     return json.dumps(result)
 
 

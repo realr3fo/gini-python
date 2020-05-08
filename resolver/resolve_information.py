@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 import requests
 
@@ -100,8 +101,9 @@ def resolve_get_properties_info_result(single_dashboard):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
     properties = eval(single_dashboard.properties)
-
-    properties_result = get_properties_binding(entity_id, entity_filters, properties)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    properties_result = loop.run_until_complete(get_properties_binding(entity_id, entity_filters, properties))
     result = properties_result
     return result
 
@@ -117,24 +119,61 @@ def resolve_get_dashboard_info_result(single_dashboard):
     return single_dashboard_data
 
 
-def resolve_get_properties_info_compare_result(single_dashboard, item_number):
+def resolve_get_properties_info_compare_result(single_dashboard):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
     properties = eval(single_dashboard.properties)
     compare_filters = eval(single_dashboard.compare_filters)
-    current_item = "item%s" % item_number
-    compare_filters_item = []
+    compare_filters_item_1 = []
+    compare_filters_item_2 = []
     for item_filter in compare_filters:
         prop = item_filter["propertyID"]
-        item_val = item_filter["value"][current_item]
-        filter_obj = {prop: item_val}
-        compare_filters_item.append(filter_obj)
-    properties_result = get_properties_binding(entity_id, entity_filters, properties, compare_filters_item, item_number)
-    result = properties_result
+        item_val_1 = item_filter["value"]["item1"]
+        item_val_2 = item_filter["value"]["item2"]
+        filter_obj_1 = {prop: item_val_1}
+        filter_obj_2 = {prop: item_val_2}
+        compare_filters_item_1.append(filter_obj_1)
+        compare_filters_item_2.append(filter_obj_2)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    properties_result_1, properties_result_2 = loop.run_until_complete(
+        asyncio.gather(get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_1),
+                       get_properties_binding(entity_id, entity_filters, properties, compare_filters_item_2)))
+    prop_result = []
+    properties_result_1 = properties_result_1["result"]
+    properties_result_2 = properties_result_2["result"]
+    for key in properties_result_1:
+        prop_id = properties_result_1[key]['id']
+        prop_label = properties_result_1[key]['label']
+        prop_link = properties_result_1[key]['link']
+        prop_1_count = properties_result_1[key]['count']
+        if key in properties_result_2:
+            prop_2_count = properties_result_2[key]['count']
+        else:
+            prop_2_count = "0"
+        prop_obj = {"id": prop_id, "label": prop_label, "link": prop_link, "count1": prop_1_count,
+                    "count2": prop_2_count}
+        prop_result.append(prop_obj)
+
+    for key in properties_result_2:
+        prop_id = properties_result_2[key]['id']
+        prop_label = properties_result_2[key]['label']
+        prop_link = properties_result_2[key]['link']
+        prop_2_count = properties_result_2[key]['count']
+        if key in properties_result_1:
+            pass
+        else:
+            prop_1_count = "0"
+            prop_obj = {"id": prop_id, "label": prop_label, "link": prop_link, "count1": prop_1_count,
+                        "count2": prop_2_count}
+            prop_result.append(prop_obj)
+
+    result = {"result": prop_result}
     return result
 
 
-def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None, item_num=None):
+async def get_properties_binding(entity_id, entity_filters, properties, compare_item_filters=None):
+    await asyncio.sleep(0)
     properties_result = {"result": {}}
     filter_query_top = ""
     filter_query_bottom = ""
@@ -185,11 +224,8 @@ def get_properties_binding(entity_id, entity_filters, properties, compare_item_f
         property_id = property_link.split("/")[-1]
         property_label = prop["pFullLabel"]["value"]
         property_entities_count = prop["cnt"]["value"]
-        count_key = "count"
-        if item_num is not None:
-            count_key += item_num
         property_obj = {"id": property_id, "label": property_label,
                         "link": property_link,
-                        count_key: property_entities_count}
+                        "count": property_entities_count}
         properties_result["result"][property_id] = property_obj
     return properties_result
