@@ -225,11 +225,11 @@ def resolve_get_dashboard_info(hash_code):
     return result
 
 
-def resolve_get_properties_info_compare(hash_code):
+def resolve_get_properties_info_compare(hash_code, item_number):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    return resolve_get_properties_info_compare_result(single_dashboard)
+    return resolve_get_properties_info_compare_result(single_dashboard, item_number)
 
 
 def save_dashboard_to_db(data):
