@@ -36,8 +36,8 @@ def get_each_amount_bounded(chunked_q_arr):
 
 async def get_gini_from_wikidata(entity, filter_query, has_property_query, offset_count):
     from resolver.resolver import LIMITS, ENDPOINT_URL
-    limit = 7500
-    offset = offset_count * 7500
+    limit = 1000
+    offset = offset_count * 1000
     query = """
             SELECT ?item ?itemLabel ?cnt ?p1 {
                 {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
@@ -130,7 +130,7 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
               "each_amount": each_amount, "histogramData": histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
-              "insight": insight, "entities": []}
+              "insight": insight, "entities": entities}
     return result
 
 
