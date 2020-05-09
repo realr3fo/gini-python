@@ -168,11 +168,11 @@ def resolve_get_comparison_gini(hash_code, item_number):
     return result
 
 
-def resolve_get_comparison_properties(hash_code, item_number):
+def resolve_get_comparison_properties(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_comparison_properties_result(single_dashboard, item_number)
+    result = resolve_get_comparison_properties_result(single_dashboard)
     return result
 
 

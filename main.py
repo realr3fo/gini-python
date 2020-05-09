@@ -195,12 +195,7 @@ def get_comparison_properties():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    item_number = request.args.get("item_number")
-    if item_number == "" or item_number is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
-    if item_number != "1" and item_number != "2":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
-    result = resolve_get_comparison_properties(hash_code, item_number)
+    result = resolve_get_comparison_properties(hash_code)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
