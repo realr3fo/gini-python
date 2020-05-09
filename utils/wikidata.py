@@ -12,7 +12,8 @@ def get_results(endpoint_url, query):
 
 
 async def async_get_results(endpoint_url, query):
-    sparql = SPARQLClient(endpoint_url)
+    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+    sparql = SPARQLClient(endpoint_url, agent=user_agent)
     result = await sparql.query(query)
     await sparql.close()
     return result
