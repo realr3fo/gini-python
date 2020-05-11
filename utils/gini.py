@@ -3,16 +3,27 @@ import math
 from utils.utils import chunks
 
 
+# def calculate_gini(q_arr):
+#     n = len(q_arr)
+#     sum_prop = sum(elem[1] for elem in q_arr)
+#     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
+#     right_below_gini_coefficient = n * sum_prop
+#     right_top_gini_coefficient = 2 * calculate_top_sum
+#     right_gini_coefficient = float(right_top_gini_coefficient) / float(right_below_gini_coefficient)
+#     left_gini_coefficient = float(n + 1) / float(n)
+#     gini_coefficient = left_gini_coefficient - right_gini_coefficient
+#     return gini_coefficient
+
+
 def calculate_gini(q_arr):
+    from statistics import mean
+    q_arr = [q_arr[i][1] for i in range(len(q_arr))]
+    q_arr = sorted(q_arr, reverse=True)
+    myu = mean(q_arr)
     n = len(q_arr)
-    sum_prop = sum(elem[1] for elem in q_arr)
-    calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
-    right_below_gini_coefficient = n * sum_prop
-    right_top_gini_coefficient = 2 * calculate_top_sum
-    right_gini_coefficient = float(right_top_gini_coefficient) / float(right_below_gini_coefficient)
-    left_gini_coefficient = float(n + 1) / float(n)
-    gini_coefficient = left_gini_coefficient - right_gini_coefficient
-    return gini_coefficient
+    sum_y = sum((i + 1) * q_arr[i] for i in range(n))
+    result = 1 + (1 / n) - ((2 / (n * n * myu)) * sum_y)
+    return result
 
 
 def get_chunked_arr(q_arr):
