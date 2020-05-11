@@ -74,7 +74,7 @@ def resolve_get_comparison_gini_unbounded(data):
     original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
-    insight = get_insight(original_data)
+    insight = get_insight(data)
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
     result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,

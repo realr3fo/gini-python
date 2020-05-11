@@ -44,7 +44,7 @@ def get_gini_with_filters():
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid Body")
         entity = body['entity']
         filters = body['filters']
-        result = resolve_gini_with_filters_unbounded(entity, filters)
+        result = resolve_gini_with_filters_unbounded(entity, filters, "")
         return json.dumps(result)
 
 
