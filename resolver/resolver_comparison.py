@@ -1,4 +1,5 @@
 from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data
+from utils.utils import interpolated
 from utils.wikidata import get_results
 
 
@@ -70,6 +71,7 @@ def resolve_get_comparison_gini_unbounded(data):
         histogram_data = []
         for elem in chunked_histogram_arr:
             histogram_data.append(sum(elem))
+    histogram_data = interpolated(histogram_data)
     histogram_data.insert(0, 0)
     original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
