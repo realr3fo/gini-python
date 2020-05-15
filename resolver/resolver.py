@@ -9,7 +9,7 @@ from resolver.resolve_analysis import resolve_get_analysis_information_result, r
 from resolver.resolve_card import resolve_get_entities_count_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
     resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result, \
-    resolve_get_compare_filters_info_result
+    resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result
 from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
@@ -176,19 +176,19 @@ def resolve_get_comparison_properties(hash_code):
     return result
 
 
-def resolve_get_analysis_information(hash_code, property_id):
+def resolve_get_analysis_information(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_analysis_information_result(single_dashboard, property_id)
+    result = resolve_get_analysis_information_result(single_dashboard)
     return result
 
 
-def resolve_get_gini_analysis(hash_code, property_id, entity_id):
+def resolve_get_gini_analysis(hash_code, property_1, entity_1, property_2, entity_2):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_gini_analysis_result(single_dashboard, property_id, entity_id)
+    result = resolve_get_gini_analysis_result(single_dashboard, property_1, entity_1, property_2, entity_2)
     return result
 
 
@@ -221,6 +221,8 @@ def resolve_get_dashboard_info(hash_code):
     result = resolve_get_dashboard_info_result(single_dashboard)
     compare_info = resolve_get_compare_filters_info_result(single_dashboard)
     result["compareInfo"] = compare_info
+    analysis_info = resolve_get_analysis_properties_info_result(single_dashboard)
+    result["analysisInfo"] = analysis_info
 
     return result
 

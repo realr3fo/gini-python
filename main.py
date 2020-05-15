@@ -212,10 +212,7 @@ def get_analysis_information():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    property_id = request.args.get("property_id")
-    if property_id == "" or property_id is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include property id")
-    result = resolve_get_analysis_information(hash_code, property_id)
+    result = resolve_get_analysis_information(hash_code)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
@@ -227,13 +224,15 @@ def get_gini_analysis():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    property_id = request.args.get("property_id")
-    if property_id == "" or property_id is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include property id")
-    entity_id = request.args.get("entity_id")
-    if entity_id == "" or entity_id is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity id")
-    result = resolve_get_gini_analysis(hash_code, property_id, entity_id)
+    property_1 = request.args.get("property_1")
+    if property_1 == "" or property_1 is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include at least one property id")
+    entity_1 = request.args.get("entity_1")
+    if entity_1 == "" or entity_1 is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include at least one entity id")
+    property_2 = request.args.get("property_2", default=0)
+    entity_2 = request.args.get("entity_2", default=0)
+    result = resolve_get_gini_analysis(hash_code, property_1, entity_1, property_2, entity_2)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)

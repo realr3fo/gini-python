@@ -1,44 +1,82 @@
+import asyncio
+import itertools
+
 from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data
-from utils.wikidata import get_results
+from utils.wikidata import get_results, async_get_results
 
 
-def resolve_get_analysis_information_result(single_dashboard, property_id):
+async def get_property_values(entity_id, filter_query, property_id):
     from resolver.resolver import LIMITS, ENDPOINT_URL
+    query = """
+        SELECT DISTINCT  ?value
+              WHERE {
+                {SELECT ?value
+                WHERE {
+                  ?entity wdt:P31 wd:%s.
+                  %s
+                  ?entity wdt:%s ?value . 
+                }
+                LIMIT %s}
+              }
+        """ % (entity_id, filter_query, property_id, LIMITS["unbounded"])
+    query_results = await async_get_results(ENDPOINT_URL, query)
+    result = {"property_id": property_id, "values": query_results["results"]["bindings"]}
+    return result
+
+
+def resolve_get_analysis_information_result(single_dashboard):
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
+    analysis_properties = eval(single_dashboard.analysis_filters)
     filter_query = ""
     for elem in filters:
         for elem_filter in elem.keys():
             filter_query += "?entity wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-    query = """
-    SELECT DISTINCT  ?value ?valueLabel
-          WHERE {
-            {SELECT ?value ?valueLabel
-            WHERE {
-              ?entity wdt:P31 wd:%s.
-              %s
-              ?entity wdt:%s ?value . 
-              ?value rdfs:label ?valueLabel .
-                FILTER(LANG(?valueLabel)="en")
-            }
-            LIMIT %s}
-          }
-    """ % (entity_id, filter_query, property_id, LIMITS["unbounded"])
-    query_results = get_results(ENDPOINT_URL, query)
-    values_query_results = query_results["results"]["bindings"]
-    values_result = []
-    for value in values_query_results:
-        value_link = value["value"]["value"]
-        value_id = value_link.split("/")[-1]
-        value_label = value["valueLabel"]["value"]
-        value_obj = {"valueLink": value_link, "value_id": value_id, "value_label": value_label}
-        values_result.append(value_obj)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = []
+    # create instance of Semaphore
+    for property_id in analysis_properties:
+        task = loop.create_task(get_property_values(entity_id, filter_query, property_id))
+        tasks.append(task)
+    query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
+    loop.close()
+    # query_results_bindings = [item for sublist in query_results_arr for item in sublist]
+    # values_query_results = query_results_bindings
 
-    result = {"amount": len(values_result), "propertyID": property_id, "values": values_result}
-    return result
+    results = {}
+    for elem in query_results_arr:
+        values_result = []
+        property_id = elem["property_id"]
+        values_query_results = [item for item in elem["values"]]
+        for value in values_query_results:
+            value_link = value["value"]["value"]
+            value_id = value_link.split("/")[-1]
+            # value_label = value["valueLabel"]["value"]
+            value_label = ""
+            value_obj = {"valueLink": value_link, "value_id": value_id, "value_label": value_label,
+                         "property": property_id}
+            values_result.append(value_obj)
+        results[property_id] = values_result
+    if len(analysis_properties) == 1:
+        combinations = []
+        for elem in results[analysis_properties[0]]:
+            obj = {"item1": elem}
+            combinations.append(obj)
+        results = {"combinations": combinations}
+    elif len(analysis_properties) == 2:
+        combinations = []
+        products = list(itertools.product(results[analysis_properties[0]], results[analysis_properties[1]]))
+        for product in products:
+            obj = {"item1": product[0], "item2": product[1]}
+            combinations.append(obj)
+        results = {"combinations": combinations}
+    else:
+        results = {}
+    return results
 
 
-def resolve_get_gini_analysis_result(single_dashboard, property_id, entity_analysis_id):
+def resolve_get_gini_analysis_result(single_dashboard, property_1, entity_1, property_2, entity_2):
     from resolver.resolver import LIMITS, ENDPOINT_URL
     from resolver.resolver_gini import get_insight, get_ten_percentile
     entity_id = single_dashboard.entity
@@ -47,7 +85,9 @@ def resolve_get_gini_analysis_result(single_dashboard, property_id, entity_analy
     for elem in filters:
         for elem_filter in elem.keys():
             filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-    filter_query += " ?item wdt:%s wd:%s . " % (property_id, entity_analysis_id)
+    filter_query += " ?item wdt:%s wd:%s . " % (property_1, entity_1)
+    if property_2 != 0:
+        filter_query += " ?item wdt:%s wd:%s . " % (property_2, entity_2)
     query = """
                 SELECT ?item ?itemLabel ?cnt {
                     {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {

@@ -97,6 +97,16 @@ def resolve_get_compare_filters_info_result(single_dashboard):
     return result
 
 
+def resolve_get_analysis_properties_info_result(single_dashboard):
+    analysis_properties = eval(single_dashboard.analysis_filters)
+    analysis_infos = []
+    for analysis_property in analysis_properties:
+        prop_info = resolve_get_item_info_sandbox(analysis_property)
+        analysis_infos.append(prop_info)
+    result = analysis_infos
+    return result
+
+
 def resolve_get_properties_info_result(single_dashboard):
     entity_id = single_dashboard.entity
     entity_filters = eval(single_dashboard.filters)
