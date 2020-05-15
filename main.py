@@ -123,6 +123,9 @@ def edit_dashboard_global():
 @cross_origin()
 def edit_dashboard_compare():
     body = request.json
+    if 'compareFilters' not in body:
+        result = {"erorMessage": "compareFilters not in body"}
+        return json.dumps(result)
     return edit_dashboard(body)
 
 
@@ -130,6 +133,9 @@ def edit_dashboard_compare():
 @cross_origin()
 def edit_dashboard_analysis():
     body = request.json
+    if 'analysisFilters' not in body:
+        result = {"erorMessage": "analysisFilters not in body"}
+        return json.dumps(result)
     return edit_dashboard(body)
 
 
