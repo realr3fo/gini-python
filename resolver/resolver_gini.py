@@ -110,8 +110,10 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
 
     chunked_q_arr = get_chunked_arr(q_arr)
     each_amount = []
+    count = 0
     for arr in chunked_q_arr:
-        each_amount.append(len(arr))
+        count += len(arr)
+        each_amount.append(count)
     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
     from collections import Counter
     property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))

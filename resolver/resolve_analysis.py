@@ -76,73 +76,187 @@ def resolve_get_analysis_information_result(single_dashboard):
     return results
 
 
-def resolve_get_gini_analysis_result(single_dashboard, property_1, entity_1, property_2, entity_2):
+async def get_gini_analysis_from_wikidata(obj_ids, obj_labels, filter_query, entity_id, offset_count):
+    from resolver.resolver import LIMITS, ENDPOINT_URL
+    limit = 1000
+    offset = offset_count * 1000
+    query = """
+                    SELECT ?item ?itemLabel ?cnt %s %s {
+                        {SELECT ?item %s (COUNT(DISTINCT(?prop)) AS ?cnt) {
+
+                        {SELECT DISTINCT %s ?item WHERE {
+                           ?item wdt:P31 wd:%s . 
+                           %s 
+                        } LIMIT %d offset %d}
+                        OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+                        ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
+
+                        } GROUP BY ?item %s}
+
+                        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+
+                        } ORDER BY DESC(?cnt)
+                    """ % (obj_ids, obj_labels, obj_ids, obj_ids, entity_id, filter_query, limit, offset, obj_ids)
+    query_results = await async_get_results(ENDPOINT_URL, query)
+    item_arr = query_results["results"]["bindings"]
+    return item_arr
+
+
+def resolve_get_gini_analysis_result(single_dashboard):
     from resolver.resolver import LIMITS, ENDPOINT_URL
     from resolver.resolver_gini import get_insight, get_ten_percentile
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
+    analysis_filters = eval(single_dashboard.analysis_filters)
+    analysis_info = single_dashboard.analysis_info
     filter_query = ""
-    for elem in filters:
-        for elem_filter in elem.keys():
-            filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-    filter_query += " ?item wdt:%s wd:%s . " % (property_1, entity_1)
-    if property_2 != 0:
-        filter_query += " ?item wdt:%s wd:%s . " % (property_2, entity_2)
-    query = """
-                SELECT ?item ?itemLabel ?cnt {
-                    {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
-
-                    {SELECT DISTINCT ?item WHERE {
-                       ?item wdt:P31 wd:%s . 
-                       %s 
-                    } LIMIT %d}
-                    OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
-                    ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
-
-                    } GROUP BY ?item}
-
-                    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-
-                    } ORDER BY DESC(?cnt)
-                """ % (entity_id, filter_query, LIMITS["unbounded"])
-    query_results = get_results(ENDPOINT_URL, query)
-    item_arr = query_results["results"]["bindings"]
+    for combination in filters:
+        for elem_filter in combination.keys():
+            filter_query += "?item wdt:%s wd:%s . " % (elem_filter, combination[elem_filter])
+    obj_labels = ""
+    obj_ids = ""
+    obj_ids_arr = []
+    for combination in analysis_filters:
+        filter_query += "?item wdt:%s ?o%s . " % (combination, combination)
+        obj_labels += "?o%sLabel " % combination
+        obj_ids += "?o%s " % combination
+        obj_ids_arr.append("o%s" % combination)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = []
+    # create instance of Semaphore
+    for i in range(10):
+        task = loop.create_task(get_gini_analysis_from_wikidata(obj_ids, obj_labels, filter_query, entity_id, i))
+        tasks.append(task)
+    query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
+    loop.close()
+    query_results_bindings = [item for sublist in query_results_arr for item in sublist]
+    item_arr = query_results_bindings
     if len(item_arr) == 0:
         result = {
             "gini": 0, "data": [], "entities": []}
         return result
     q_arr = []
-    for elem in item_arr:
-        item_link = elem['item']['value']
+    obj_values = {}
+    for obj_id in obj_ids_arr:
+        obj_values[obj_id] = set()
+    for combination in item_arr:
+        item_link = combination['item']['value']
         item_id = item_link.split("/")[-1]
-        property_count = int(elem['cnt']['value'])
-        item_label = elem['itemLabel']['value']
+        property_count = int(combination['cnt']['value'])
+        item_label = combination['itemLabel']['value']
         entity_obj = (item_id, property_count, item_label, item_link)
+        for obj_id in obj_ids_arr:
+            entity_list = list(entity_obj)
+            obj_link = combination[obj_id]['value']
+            obj_value = obj_link.split("/")[-1]
+            obj_label = combination[obj_id + "Label"]['value']
+            obj_values[obj_id].add(obj_value)
+            entity_list.append(obj_value)
+            entity_list.append(obj_label)
+            entity_obj = tuple(entity_list)
         q_arr.append(entity_obj)
+    for obj_id in obj_ids_arr:
+        obj_values[obj_id] = list(obj_values[obj_id])
+    combinations = []
+    if len(obj_ids_arr) == 1:
+        for product in obj_values[obj_ids_arr[0]]:
+            obj = {"item_1": product}
+            combinations.append(obj)
+    if len(obj_ids_arr) == 2:
+        products = list(itertools.product(obj_values[obj_ids_arr[0]], obj_values[obj_ids_arr[1]]))
+        for product in products:
+            obj = {"item_1": product[0], "item_2": product[1]}
+            combinations.append(obj)
 
-    q_arr = sorted(q_arr, key=lambda x: x[1])
-    gini_coefficient = calculate_gini(q_arr)
-    gini_coefficient = round(gini_coefficient, 3)
-    if len(q_arr) >= LIMITS["unbounded"]:
-        exceed_limit = True
-    else:
-        exceed_limit = False
+    analysis_results = []
+    for combination in combinations:
+        new_q_arr = []
+        obj_1_label = ""
+        obj_2_label = ""
+        for q in q_arr:
+            if "item_2" in combination:
+                if q[4] == combination["item_1"] and q[6] == combination["item_2"]:
+                    obj_1_label = q[5]
+                    obj_2_label = q[7]
+                    new_q_arr.append(q)
+            else:
+                if q[4] == combination["item_1"]:
+                    obj_1_label = q[5]
+                    new_q_arr.append(q)
 
-    chunked_q_arr = get_chunked_arr(q_arr)
-    each_amount = []
-    for arr in chunked_q_arr:
-        each_amount.append(len(arr))
-    cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
-    original_data = list(cumulative_data)
-    cumulative_data.insert(0, 0)
-    data = normalize_data(cumulative_data)
-    insight = get_insight(original_data)
-    percentiles = get_ten_percentile(original_data)
-    percentiles.insert(0, '0%')
-    result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
-              "each_amount": each_amount,
-              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
-              "insight": insight, "entities": entities}
+        single_analysis_info = {
+            "property_1": analysis_info[0]["id"],
+            "propety_1_label": analysis_info[0]["label"],
+            "item_1": combination["item_1"],
+            "item_1_label": obj_1_label}
+        if "item_2" in combination:
+            single_analysis_info["property_2"] = analysis_info[1]["id"]
+            single_analysis_info["property_2_label"] = analysis_info[1]["label"]
+            single_analysis_info["item_2"] = combination["item_2"]
+            single_analysis_info["item_2_label"] = obj_2_label
+
+        new_q_arr = sorted(new_q_arr, key=lambda x: x[1])
+        if len(new_q_arr) == 0:
+            result = {"analysis_info": single_analysis_info, "limit": LIMITS, "amount": 0,
+                      "gini": 0,
+                      "each_amount": [],
+                      "data": [], "exceedLimit": False, "percentileData": [],
+                      "insight": ""}
+            analysis_results.append(result)
+            continue
+        gini_coefficient = calculate_gini(new_q_arr)
+        gini_coefficient = round(gini_coefficient, 3)
+        if len(new_q_arr) >= LIMITS["unbounded"]:
+            exceed_limit = True
+        else:
+            exceed_limit = False
+        chunked_q_arr = get_chunked_arr(new_q_arr)
+        each_amount = []
+        count = 0
+        for arr in chunked_q_arr:
+            count += len(arr)
+            each_amount.append(count)
+        cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+        original_data = list(cumulative_data)
+        cumulative_data.insert(0, 0)
+        data = normalize_data(cumulative_data)
+        insight = get_insight(original_data)
+        percentiles = get_ten_percentile(original_data)
+        percentiles.insert(0, '0%')
+        result = {"analysis_info": single_analysis_info, "limit": LIMITS, "amount": sum(each_amount),
+                  "gini": gini_coefficient,
+                  "each_amount": each_amount,
+                  "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
+                  "insight": insight}
+        analysis_results.append(result)
+
+    # q_arr = sorted(q_arr, key=lambda x: x[1])
+    # gini_coefficient = calculate_gini(q_arr)
+    # gini_coefficient = round(gini_coefficient, 3)
+    # if len(q_arr) >= LIMITS["unbounded"]:
+    #     exceed_limit = True
+    # else:
+    #     exceed_limit = False
+    #
+    # chunked_q_arr = get_chunked_arr(q_arr)
+    # each_amount = []
+    # count = 0
+    # for arr in chunked_q_arr:
+    #     count += len(arr)
+    #     each_amount.append(count)
+    # cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    # original_data = list(cumulative_data)
+    # cumulative_data.insert(0, 0)
+    # data = normalize_data(cumulative_data)
+    # insight = get_insight(original_data)
+    # percentiles = get_ten_percentile(original_data)
+    # percentiles.insert(0, '0%')
+    # result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
+    #           "each_amount": each_amount,
+    #           "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
+    #           "insight": insight, "entities": entities}
+    result = {"data": analysis_results}
     return result
 
 

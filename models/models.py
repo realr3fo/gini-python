@@ -43,6 +43,7 @@ class Dashboards(db.Model):
     entity_info = db.Column(db.JSON(), default={})
     filters_info = db.Column(db.JSON(), default={})
     properties_info = db.Column(db.JSON(), default={})
+    analysis_info = db.Column(db.JSON(), default={})
 
     def __init__(self, name, author, entity, hash_code, timestamp):
         self.name = name

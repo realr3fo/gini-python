@@ -88,6 +88,14 @@ def resolve_edit_dashboard(data):
     single_dashboard.compare_filters = entity_compare_filters
     single_dashboard.analysis_filters = entity_analysis_filters
 
+    entity_info = resolve_get_entity_information_result(single_dashboard)
+    single_dashboard.entity_info = entity_info["entity"]
+    single_dashboard.filters_info = entity_info["filters"]
+    single_dashboard.properties_info = entity_info["properties"]
+
+    analysis_info = resolve_get_analysis_properties_info_result(single_dashboard)
+    single_dashboard.analysis_info = analysis_info
+
     if "entityID" in data or "filters" in data or "properties" in data:
         single_dashboard.instances = {}
 
@@ -184,11 +192,11 @@ def resolve_get_analysis_information(hash_code):
     return result
 
 
-def resolve_get_gini_analysis(hash_code, property_1, entity_1, property_2, entity_2):
+def resolve_get_gini_analysis(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_gini_analysis_result(single_dashboard, property_1, entity_1, property_2, entity_2)
+    result = resolve_get_gini_analysis_result(single_dashboard)
     return result
 
 
@@ -217,13 +225,14 @@ def resolve_get_dashboard_info(hash_code):
     single_dashboard.entity_info = entity_info["entity"]
     single_dashboard.filters_info = entity_info["filters"]
     single_dashboard.properties_info = entity_info["properties"]
-    db.session.commit()
     result = resolve_get_dashboard_info_result(single_dashboard)
     compare_info = resolve_get_compare_filters_info_result(single_dashboard)
     result["compareInfo"] = compare_info
     analysis_info = resolve_get_analysis_properties_info_result(single_dashboard)
     result["analysisInfo"] = analysis_info
+    single_dashboard.analysis_info = analysis_info
 
+    db.session.commit()
     return result
 
 
