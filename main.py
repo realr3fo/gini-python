@@ -34,7 +34,10 @@ def get_gini_with_filters():
         if hash_code == "" or hash_code is None:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
         prop = request.args.get('property')
-        result = resolve_get_entity_gini_by_hash(hash_code, prop)
+        try:
+            result = resolve_get_entity_gini_by_hash(hash_code, prop)
+        except Exception as e:
+            abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
         if "errorMessage" in result:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
         return json.dumps(result)
@@ -189,7 +192,11 @@ def get_comparison_gini():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
     if item_number != "1" and item_number != "2":
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
-    result = resolve_get_comparison_gini(hash_code, item_number)
+    try:
+        result = resolve_get_comparison_gini(hash_code, item_number)
+    except Exception as e:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
+
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
@@ -230,7 +237,10 @@ def get_gini_analysis():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    result = resolve_get_gini_analysis(hash_code)
+    try:
+        result = resolve_get_gini_analysis(hash_code)
+    except Exception as e:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, str(e))
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
