@@ -76,6 +76,18 @@ def resolve_get_analysis_information_result(single_dashboard):
     return results
 
 
+def get_analysis_statistics(property_count_arr):
+    sum_property_count = sum(property_count_arr)
+    from statistics import mean
+    average = round(mean(property_count_arr), 3)
+    max_prop = max(property_count_arr)
+    min_prop = min(property_count_arr)
+
+    result = {"total_properties": sum_property_count, "average_distinct_properties": average, "min": min_prop,
+              "max": max_prop}
+    return result
+
+
 async def get_gini_analysis_from_wikidata(obj_ids, obj_labels, filter_query, entity_id, offset_count):
     from resolver.resolver import LIMITS, ENDPOINT_URL
     limit = 1000
@@ -198,7 +210,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
 
         new_q_arr = sorted(new_q_arr, key=lambda x: x[1])
         if len(new_q_arr) == 0:
-            result = {"analysis_info": single_analysis_info, "limit": LIMITS, "amount": 0,
+            result = {"analysis_info": single_analysis_info, "statistics": {}, "limit": LIMITS, "amount": 0,
                       "gini": 0,
                       "each_amount": [],
                       "data": [], "exceedLimit": False, "percentileData": [],
@@ -224,38 +236,17 @@ def resolve_get_gini_analysis_result(single_dashboard):
         insight = get_insight(original_data)
         percentiles = get_ten_percentile(original_data)
         percentiles.insert(0, '0%')
-        result = {"analysis_info": single_analysis_info, "limit": LIMITS, "amount": sum(each_amount),
+
+        property_count_arr = [x[1] for x in new_q_arr]
+        statistics = get_analysis_statistics(property_count_arr)
+
+        result = {"analysis_info": single_analysis_info, "statistics": statistics, "limit": LIMITS,
+                  "amount": each_amount[-1],
                   "gini": gini_coefficient,
                   "each_amount": each_amount,
                   "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
                   "insight": insight}
         analysis_results.append(result)
-
-    # q_arr = sorted(q_arr, key=lambda x: x[1])
-    # gini_coefficient = calculate_gini(q_arr)
-    # gini_coefficient = round(gini_coefficient, 3)
-    # if len(q_arr) >= LIMITS["unbounded"]:
-    #     exceed_limit = True
-    # else:
-    #     exceed_limit = False
-    #
-    # chunked_q_arr = get_chunked_arr(q_arr)
-    # each_amount = []
-    # count = 0
-    # for arr in chunked_q_arr:
-    #     count += len(arr)
-    #     each_amount.append(count)
-    # cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
-    # original_data = list(cumulative_data)
-    # cumulative_data.insert(0, 0)
-    # data = normalize_data(cumulative_data)
-    # insight = get_insight(original_data)
-    # percentiles = get_ten_percentile(original_data)
-    # percentiles.insert(0, '0%')
-    # result = {"limit": LIMITS, "amount": sum(each_amount), "gini": gini_coefficient,
-    #           "each_amount": each_amount,
-    #           "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
-    #           "insight": insight, "entities": entities}
     result = {"data": analysis_results}
     return result
 
