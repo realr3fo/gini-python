@@ -150,6 +150,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
         return result
     q_arr = []
     obj_values = {}
+    objects_label = {}
     for obj_id in obj_ids_arr:
         obj_values[obj_id] = set()
     for combination in item_arr:
@@ -164,6 +165,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
             obj_value = obj_link.split("/")[-1]
             obj_label = combination[obj_id + "Label"]['value']
             obj_values[obj_id].add(obj_value)
+            objects_label[obj_value] = obj_label
             entity_list.append(obj_value)
             entity_list.append(obj_label)
             entity_obj = tuple(entity_list)
@@ -184,19 +186,16 @@ def resolve_get_gini_analysis_result(single_dashboard):
     analysis_results = []
     for combination in combinations:
         new_q_arr = []
-        obj_1_label = ""
+        obj_1_label = objects_label[combination["item_1"]]
         obj_2_label = ""
         for q in q_arr:
             if "item_2" in combination:
+                obj_2_label = objects_label[combination["item_2"]]
                 if q[4] == combination["item_1"] and q[6] == combination["item_2"]:
-                    obj_1_label = q[5]
-                    obj_2_label = q[7]
                     new_q_arr.append(q)
             else:
                 if q[4] == combination["item_1"]:
-                    obj_1_label = q[5]
                     new_q_arr.append(q)
-
         single_analysis_info = {
             "property_1": analysis_info[0]["id"],
             "propety_1_label": analysis_info[0]["label"],
