@@ -216,6 +216,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
                       "insight": ""}
             analysis_results.append(result)
             continue
+
         gini_coefficient = calculate_gini(new_q_arr)
         gini_coefficient = round(gini_coefficient, 3)
         if len(new_q_arr) >= LIMITS["unbounded"]:
@@ -229,6 +230,19 @@ def resolve_get_gini_analysis_result(single_dashboard):
             count += len(arr)
             each_amount.append(count)
         cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+
+        from collections import Counter
+        property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))
+        histogram_data = [count for _, count in property_counts.items()]
+        if len(histogram_data) > 10:
+            chunked_histogram_arr = get_chunked_arr(histogram_data)
+            histogram_data = []
+            for elem in chunked_histogram_arr:
+                histogram_data.append(sum(elem))
+        from utils.utils import interpolated
+        histogram_data = interpolated(histogram_data)
+        histogram_data.insert(0, 0)
+
         original_data = list(cumulative_data)
         cumulative_data.insert(0, 0)
         data = normalize_data(cumulative_data)
@@ -240,7 +254,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
         statistics = get_analysis_statistics(property_count_arr)
 
         result = {"analysis_info": single_analysis_info, "statistics": statistics, "limit": LIMITS,
-                  "amount": each_amount[-1],
+                  "amount": each_amount[-1], "histogram_data": histogram_data,
                   "gini": gini_coefficient,
                   "each_amount": each_amount,
                   "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
