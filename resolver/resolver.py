@@ -9,7 +9,7 @@ from resolver.resolve_analysis import resolve_get_analysis_information_result, r
 from resolver.resolve_card import resolve_get_entities_count_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
     resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result, \
-    resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result
+    resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result, resolve_get_entity_info_result
 from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
     resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
@@ -242,6 +242,10 @@ def resolve_get_properties_info_compare(hash_code):
         return {"errorMessage": "data with the given hash code was not found"}
     return resolve_get_properties_info_compare_result(single_dashboard)
 
+
+def resolve_get_entity_info(entity_id):
+    result = resolve_get_entity_info_result(entity_id)
+    return result
 
 def save_dashboard_to_db(data):
     name = data['name']

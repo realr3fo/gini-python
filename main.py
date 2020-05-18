@@ -298,5 +298,15 @@ def get_properties_info_compare():
     return json.dumps(result)
 
 
+@app.route('/api/entity/info', methods=['GET'])
+@cross_origin()
+def get_entity_info():
+    entity_id = request.args.get("entity_id")
+    if entity_id == "" or entity_id is None:
+        abort(abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity_id"))
+    result = resolve_get_entity_info(entity_id)
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

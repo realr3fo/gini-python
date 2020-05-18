@@ -239,3 +239,67 @@ async def get_properties_binding(entity_id, entity_filters, properties, compare_
                         "count": property_entities_count}
         properties_result["result"][property_id] = property_obj
     return properties_result
+
+
+async def get_class_info_from_wikidata(entity_id):
+    query_class = """
+        select ?class ?classDescription ?classLabel{
+      wd:%s wdt:P31 ?class .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+        """ % entity_id
+    from resolver.resolver import ENDPOINT_URL
+    query_results = await async_get_results(ENDPOINT_URL, query_class)
+    query_results_bindings = query_results["results"]["bindings"]
+    return query_results_bindings
+
+
+async def get_prop_obj_info_from_wikidata(entity_id):
+    query_prop_obj = """
+        select ?prop ?propLabel ?propDescription ?o ?oLabel ?oDescription{
+      wd:%s ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/"))  
+      ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .}
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+    }
+        """ % entity_id
+    from resolver.resolver import ENDPOINT_URL
+    query_results = await async_get_results(ENDPOINT_URL, query_prop_obj)
+    query_results_bindings = query_results["results"]["bindings"]
+    return query_results_bindings
+
+
+def resolve_get_entity_info_result(entity_id):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tasks = [loop.create_task(get_class_info_from_wikidata(entity_id)),
+             loop.create_task(get_prop_obj_info_from_wikidata(entity_id))]
+    # create instance of Semaphore
+    query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
+    loop.close()
+    query_results_bindings = [sublist for sublist in query_results_arr]
+    class_results = query_results_bindings[0]
+    prop_obj_results = query_results_bindings[1]
+    classes = []
+    for elem in class_results:
+        class_link = elem['class']['value']
+        class_id = class_link.split("/")[-1]
+        class_label = elem.get('classLabel', {}).get('value', '')
+        class_description = elem.get('classDescription', {}).get('value', '')
+        class_obj = {'id': class_id, 'label': class_label, 'description': class_description, 'link': class_link}
+        classes.append(class_obj)
+    filters = []
+    for elem in prop_obj_results:
+        prop_link = elem['prop']['value']
+        prop_id = prop_link.split("/")[-1]
+        prop_label = elem.get('propLabel', {}).get('value', '')
+        prop_description = elem.get('propDescription', {}).get('value', '')
+        obj_link = elem['o']['value']
+        obj_id = obj_link.split("/")[-1]
+        obj_label = elem.get('oLabel', {}).get('value', '')
+        obj_description = elem.get('oDescription', {}).get('value', '')
+        property_obj = {'id': prop_id, 'label': prop_label, 'description': prop_description, 'link': prop_link}
+        object_obj = {'id': obj_id, 'label': obj_label, 'description': obj_description, 'link': obj_link}
+        filter_obj = {'property': property_obj, 'value': object_obj}
+        filters.append(filter_obj)
+    result = {'classes': classes, 'filters': filters}
+    return result
