@@ -68,13 +68,13 @@ def resolve_get_comparison_gini_unbounded(data):
     from collections import Counter
     property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))
     histogram_data = [count for _, count in property_counts.items()]
-    if len(histogram_data) > 10:
-        chunked_histogram_arr = get_chunked_arr(histogram_data)
+    if len(histogram_data) > 11:
+        chunked_histogram_arr = get_chunked_arr(histogram_data, 11)
         histogram_data = []
         for elem in chunked_histogram_arr:
             histogram_data.append(sum(elem))
-    histogram_data = interpolated(histogram_data)
-    histogram_data.insert(0, 0)
+    histogram_data = interpolated(histogram_data, 11)
+
     original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)

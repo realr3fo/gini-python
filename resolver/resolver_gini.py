@@ -138,81 +138,81 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     return result
 
 
-def resolve_gini_with_filters_bounded(entity_id, filters, properties, has_property):
-    properties = properties
-    new_properties = []
-    for elem in properties:
-        new_elem = elem.strip()
-        new_properties.append(new_elem)
-    properties = new_properties
-
-    jml_join = " + ?".join(properties)
-
-    filter_query = ""
-    for elem in filters:
-        for elem_filter in elem.keys():
-            filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
-
-    query = "SELECT DISTINCT ?item ?itemLabel ?p1 "
-    for elem in properties:
-        query += "?%s " % elem
-    query += "(?%s AS ?count) {" % jml_join
-    query += "{ SELECT ?item ?p1 "
-    for elem in properties:
-        query += "?%s " % elem
-    from resolver.resolver import LIMITS
-    query += "WHERE{ { SELECT ?item WHERE { ?item wdt:P31 wd:%s . %s } LIMIT %d}" % (
-        entity_id, filter_query, LIMITS["bounded"])
-    for i in range(len(properties)):
-        query += "OPTIONAL { ?item wdt:%s _:v%d . BIND (1 AS ?%s) } " % (properties[i], i, properties[i])
-    for elem in properties:
-        query += "OPTIONAL { BIND (0 AS ?%s) } " % elem
-    if has_property != "" and has_property is not None:
-        query += " OPTIONAL { ?item wdt:%s _:v-0 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
-    query += """}} SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
-    from resolver.resolver import ENDPOINT_URL
-    query_results = get_results(ENDPOINT_URL, query)
-    item_arr = query_results["results"]["bindings"]
-    q_arr = []
-    for elem in item_arr:
-        item_link = elem["item"]["value"]
-        item_id = item_link.split("/")[-1]
-        property_count = int(elem["count"]["value"])
-        entity_props = []
-        for prop in properties:
-            if elem[prop]["value"] == "1":
-                entity_props.append(prop)
-        item_label = elem["itemLabel"]["value"]
-        item_has_property = None
-        if 'p1' in elem:
-            item_has_property = elem['p1']['value']
-            if item_has_property == '1':
-                item_has_property = True
-            else:
-                item_has_property = False
-        entity_obj = (item_id, property_count, item_label, item_link, entity_props, item_has_property)
-        q_arr.append(entity_obj)
-    q_arr = sorted(q_arr, key=lambda x: x[1])
-
-    if len(q_arr) >= LIMITS["bounded"]:
-        exceed_limit = True
-    else:
-        exceed_limit = False
-
-    gini_coefficient = calculate_gini(q_arr)
-    gini_coefficient = round(gini_coefficient, 3)
-    chunked_q_arr = get_chunked_arr(q_arr)
-    each_amount = get_each_amount_bounded(chunked_q_arr)
-    cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
-    original_data = list(cumulative_data)
-    cumulative_data.insert(0, 0)
-    data = normalize_data(cumulative_data)
-    insight = get_insight(original_data)
-    percentiles = get_ten_percentile(original_data)
-    percentiles.insert(0, '0%')
-    # property_gap = get_property_gap(chunked_q_arr)
-    result = {"insight": insight, "limit": LIMITS, "amount": sum(each_amount),
-              "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
-              "percentileData": percentiles,
-              "data": data, "entities": entities}
-    return result
+# def resolve_gini_with_filters_bounded(entity_id, filters, properties, has_property):
+#     properties = properties
+#     new_properties = []
+#     for elem in properties:
+#         new_elem = elem.strip()
+#         new_properties.append(new_elem)
+#     properties = new_properties
+#
+#     jml_join = " + ?".join(properties)
+#
+#     filter_query = ""
+#     for elem in filters:
+#         for elem_filter in elem.keys():
+#             filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem[elem_filter])
+#
+#     query = "SELECT DISTINCT ?item ?itemLabel ?p1 "
+#     for elem in properties:
+#         query += "?%s " % elem
+#     query += "(?%s AS ?count) {" % jml_join
+#     query += "{ SELECT ?item ?p1 "
+#     for elem in properties:
+#         query += "?%s " % elem
+#     from resolver.resolver import LIMITS
+#     query += "WHERE{ { SELECT ?item WHERE { ?item wdt:P31 wd:%s . %s } LIMIT %d}" % (
+#         entity_id, filter_query, LIMITS["bounded"])
+#     for i in range(len(properties)):
+#         query += "OPTIONAL { ?item wdt:%s _:v%d . BIND (1 AS ?%s) } " % (properties[i], i, properties[i])
+#     for elem in properties:
+#         query += "OPTIONAL { BIND (0 AS ?%s) } " % elem
+#     if has_property != "" and has_property is not None:
+#         query += " OPTIONAL { ?item wdt:%s _:v-0 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
+#     query += """}} SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}"""
+#     from resolver.resolver import ENDPOINT_URL
+#     query_results = get_results(ENDPOINT_URL, query)
+#     item_arr = query_results["results"]["bindings"]
+#     q_arr = []
+#     for elem in item_arr:
+#         item_link = elem["item"]["value"]
+#         item_id = item_link.split("/")[-1]
+#         property_count = int(elem["count"]["value"])
+#         entity_props = []
+#         for prop in properties:
+#             if elem[prop]["value"] == "1":
+#                 entity_props.append(prop)
+#         item_label = elem["itemLabel"]["value"]
+#         item_has_property = None
+#         if 'p1' in elem:
+#             item_has_property = elem['p1']['value']
+#             if item_has_property == '1':
+#                 item_has_property = True
+#             else:
+#                 item_has_property = False
+#         entity_obj = (item_id, property_count, item_label, item_link, entity_props, item_has_property)
+#         q_arr.append(entity_obj)
+#     q_arr = sorted(q_arr, key=lambda x: x[1])
+#
+#     if len(q_arr) >= LIMITS["bounded"]:
+#         exceed_limit = True
+#     else:
+#         exceed_limit = False
+#
+#     gini_coefficient = calculate_gini(q_arr)
+#     gini_coefficient = round(gini_coefficient, 3)
+#     chunked_q_arr = get_chunked_arr(q_arr)
+#     each_amount = get_each_amount_bounded(chunked_q_arr)
+#     cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+#     original_data = list(cumulative_data)
+#     cumulative_data.insert(0, 0)
+#     data = normalize_data(cumulative_data)
+#     insight = get_insight(original_data)
+#     percentiles = get_ten_percentile(original_data)
+#     percentiles.insert(0, '0%')
+#     # property_gap = get_property_gap(chunked_q_arr)
+#     result = {"insight": insight, "limit": LIMITS, "amount": sum(each_amount),
+#               "gini": gini_coefficient, "each_amount": each_amount, "exceedLimit": exceed_limit,
+#               "percentileData": percentiles,
+#               "data": data, "entities": entities}
+#     return result

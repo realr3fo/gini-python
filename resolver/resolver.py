@@ -15,7 +15,7 @@ from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_s
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
     resolve_get_filter_suggestions_result, resolve_get_wikidata_entities_result
 from resolver.resolver_comparison import resolve_get_comparison_gini_result, resolve_get_comparison_properties_result
-from resolver.resolver_gini import resolve_gini_with_filters_unbounded, resolve_gini_with_filters_bounded
+from resolver.resolver_gini import resolve_gini_with_filters_unbounded
 
 ENDPOINT_URL = "https://query.wikidata.org/sparql"
 LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap": 1000}

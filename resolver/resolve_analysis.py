@@ -153,6 +153,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
     objects_label = {}
     for obj_id in obj_ids_arr:
         obj_values[obj_id] = set()
+    total_amount = len(item_arr)
     for combination in item_arr:
         item_link = combination['item']['value']
         item_id = item_link.split("/")[-1]
@@ -234,14 +235,13 @@ def resolve_get_gini_analysis_result(single_dashboard):
         from collections import Counter
         property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))
         histogram_data = [count for _, count in property_counts.items()]
-        if len(histogram_data) > 10:
-            chunked_histogram_arr = get_chunked_arr(histogram_data)
+        if len(histogram_data) > 11:
+            chunked_histogram_arr = get_chunked_arr(histogram_data, 11)
             histogram_data = []
             for elem in chunked_histogram_arr:
                 histogram_data.append(sum(elem))
         from utils.utils import interpolated
-        histogram_data = interpolated(histogram_data)
-        histogram_data.insert(0, 0)
+        histogram_data = interpolated(histogram_data, 11)
 
         original_data = list(cumulative_data)
         cumulative_data.insert(0, 0)
@@ -260,7 +260,7 @@ def resolve_get_gini_analysis_result(single_dashboard):
                   "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
                   "insight": insight}
         analysis_results.append(result)
-    result = {"data": analysis_results}
+    result = {"total_entities_amount": total_amount, "data": analysis_results}
     return result
 
 

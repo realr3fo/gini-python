@@ -26,8 +26,8 @@ def calculate_gini(q_arr):
     return result
 
 
-def get_chunked_arr(q_arr):
-    chunk_size = float(len(q_arr)) / float(10)
+def get_chunked_arr(q_arr, num=10):
+    chunk_size = float(len(q_arr)) / float(num)
     chunk_size = math.ceil(chunk_size)
 
     chunked_q_arr = chunks(q_arr, chunk_size)
