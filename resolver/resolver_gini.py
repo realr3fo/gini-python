@@ -13,8 +13,8 @@ def get_each_amount_bounded(chunked_q_arr):
 
 async def get_gini_from_wikidata(entity, filter_query, has_property_query, offset_count):
     from resolver.resolver import ENDPOINT_URL
-    limit = 1000
-    offset = offset_count * 1000
+    limit = 2000
+    offset = offset_count * 2000
     query = """
             SELECT ?item ?itemLabel ?cnt ?p1 {
                 {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
@@ -37,6 +37,23 @@ async def get_gini_from_wikidata(entity, filter_query, has_property_query, offse
     return query_results["results"]["bindings"]
 
 
+def create_query(entity, filter_query, has_property_query, limit=1000):
+    query = """SELECT ?item ?itemLabel ?cnt ?p1 {
+    {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
+    {SELECT DISTINCT ?item WHERE {
+       ?item wdt:P31 wd:%s .
+       %s
+    } LIMIT %d}
+    OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+    ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
+    %s
+    } GROUP BY ?item ?p1}
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+} ORDER BY DESC(?cnt)
+                """ % (entity, filter_query, limit, has_property_query)
+    return query
+
+
 def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     filter_query = ""
     for elem in filters:
@@ -45,11 +62,12 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
     has_property_query = ""
     if has_property != "" and has_property is not None:
         has_property_query += " OPTIONAL { ?item wdt:%s _:v1 . BIND (1 AS ?p1) } OPTIONAL { BIND (0 AS ?p1) } " % has_property
+    query = create_query(entity, filter_query, has_property_query)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     tasks = []
     # create instance of Semaphore
-    for i in range(10):
+    for i in range(5):
         task = loop.create_task(get_gini_from_wikidata(entity, filter_query, has_property_query, i))
         tasks.append(task)
     query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))
@@ -75,5 +93,5 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
                 item_has_property = False
         entity_obj = (item_id, property_count, item_label, item_link, item_has_property)
         q_arr.append(entity_obj)
-    result = construct_results_gini(q_arr)
+    result = construct_results_gini(q_arr, query)
     return result

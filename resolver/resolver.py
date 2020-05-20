@@ -165,7 +165,6 @@ def resolve_get_all_profiles():
     for dashboard in dashboards:
         dashboard_data = dashboard.serialize()
         del dashboard_data['id']
-        del dashboard_data['instances']
         for elem in dashboard_data.keys():
             try:
                 dashboard_data[elem] = eval(dashboard_data[elem])
@@ -262,21 +261,20 @@ def resolve_duplicate_dashboard(hash_code):
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
     row_data = single_dashboard.serialize()
-    duplicate_hash_code = ""
     timestamp = str(time.time())
     uuid_string = str(uuid.uuid4())
-    hash_code = uuid_string.split("-")[-1]
+    duplicate_hash_code = uuid_string.split("-")[-1]
     try:
         dashboard = Dashboards(
             name=row_data["name"],
             author=row_data["author"],
             entity=row_data["entity"],
-            hash_code=hash_code,
+            hash_code=duplicate_hash_code,
             timestamp=timestamp,
         )
         dashboard.filters = row_data["filters"]
         dashboard.compare_filters = row_data["compareFilters"]
-        dashboard.analysis_filters  = row_data["analysisFilters"]
+        dashboard.analysis_filters = row_data["analysisFilters"]
         dashboard.entity_info = row_data['entityInfo']
         dashboard.filters_info = row_data['filtersInfo']
         db.session.add(dashboard)
@@ -285,4 +283,17 @@ def resolve_duplicate_dashboard(hash_code):
         return {"errorMessage": str(e)}
 
     result = {"hash_code": duplicate_hash_code}
+    return result
+
+
+def resolve_set_dashboard_status(hash_code, status):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    if status == "public":
+        single_dashboard.public = True
+    else:
+        single_dashboard.public = False
+    db.session.commit()
+    result = {"result": "success"}
     return result

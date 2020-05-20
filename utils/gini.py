@@ -1,4 +1,6 @@
 import math
+import re
+import urllib.parse
 
 from utils.utils import chunks, interpolated
 
@@ -89,7 +91,8 @@ def get_insight(data):
     return result
 
 
-def construct_results_gini(q_arr):
+# noinspection PyTypeChecker
+def construct_results_gini(q_arr, query=""):
     from resolver.resolver import LIMITS
 
     q_arr = sorted(q_arr, key=lambda x: x[1])
@@ -128,7 +131,9 @@ def construct_results_gini(q_arr):
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
 
-    result = {"limit": LIMITS, "amount": each_amount[-1], "gini": gini_coefficient,
+    query_link = "https://query.wikidata.org/#" + urllib.parse.quote(query)
+
+    result = {"limit": LIMITS, "query_link": query_link, "amount": each_amount[-1], "gini": gini_coefficient,
               "each_amount": each_amount, "histogramData": histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}

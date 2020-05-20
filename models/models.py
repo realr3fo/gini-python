@@ -57,7 +57,8 @@ class Dashboards(db.Model):
             'additionalFilters': self.additional_filters,
             "entityInfo": self.entity_info,
             "filtersInfo": self.filters_info,
-            "propertiesInfo": self.properties_info
+            "propertiesInfo": self.properties_info,
+            "public": self.public,
         }
 
 

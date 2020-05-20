@@ -29,6 +29,22 @@ async def get_gini_from_wikidata(entity, filter_query, offset_count):
     return query_results["results"]["bindings"]
 
 
+def create_query(entity_id, filter_query, limit=1000):
+    query = """SELECT ?item ?itemLabel ?cnt {
+    {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
+        {SELECT DISTINCT ?item WHERE {
+           ?item wdt:P31 wd:%s . 
+           %s 
+        } LIMIT %d}
+        OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
+        ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
+        } GROUP BY ?item}
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+} ORDER BY DESC(?cnt)
+""" % (entity_id, filter_query, limit)
+    return query
+
+
 def resolve_get_comparison_gini_unbounded(data):
     entity_id = data["entity_id"]
     filters = data["filters"]
@@ -42,6 +58,7 @@ def resolve_get_comparison_gini_unbounded(data):
         elem_filter = elem["propertyID"]
         elem_value = elem["value"][item_number]
         filter_query += "?item wdt:%s wd:%s . " % (elem_filter, elem_value)
+    query = create_query(entity_id, filter_query)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     tasks = []
@@ -65,7 +82,7 @@ def resolve_get_comparison_gini_unbounded(data):
         item_label = elem['itemLabel']['value']
         entity_obj = (item_id, property_count, item_label, item_link)
         q_arr.append(entity_obj)
-    result = construct_results_gini(q_arr)
+    result = construct_results_gini(q_arr, query)
     return result
 
 

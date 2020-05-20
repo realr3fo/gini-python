@@ -298,6 +298,21 @@ def get_duplicate_dashboard():
     return json.dumps(result)
 
 
+@app.route('/api/dashboard/status', methods=['GET'])
+@cross_origin()
+def get_dashboard_new_status():
+    hash_code = request.args.get("hash_code")
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    status = request.args.get("status")
+    if status == "" or status is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard status")
+    result = resolve_set_dashboard_status(hash_code, status)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
 def check_hash_code_and_call_resolver(hash_code, resolver):
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
