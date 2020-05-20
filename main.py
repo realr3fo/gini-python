@@ -151,16 +151,16 @@ def get_properties_info():
     return json.dumps(result)
 
 
-@app.route('/api/properties/gap', methods=['GET'])
-@cross_origin()
-def get_properties_gap():
-    hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
-    result = resolve_get_property_gap_api_sandbox(hash_code)
-    if "errorMessage" in result:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
-    return json.dumps(result)
+# @app.route('/api/properties/gap', methods=['GET'])
+# @cross_origin()
+# def get_properties_gap():
+#     hash_code = request.args.get("hash_code")
+#     if hash_code == "" or hash_code is None:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+#     result = resolve_get_property_gap_api_sandbox(hash_code)
+#     if "errorMessage" in result:
+#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+#     return json.dumps(result)
 
 
 @app.route('/api/browse', methods=['GET'])
@@ -174,13 +174,8 @@ def get_all_profiles():
 @cross_origin()
 def get_comparison_gini():
     hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
     item_number = request.args.get("item_number")
-    if item_number == "" or item_number is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
-    if item_number != "1" and item_number != "2":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
+    comparison_check(hash_code, item_number)
     result = {}
     try:
         result = resolve_get_comparison_gini(hash_code, item_number)
@@ -196,17 +191,21 @@ def get_comparison_gini():
 @cross_origin()
 def get_comparison_properties():
     hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
     item_number = request.args.get("item_number")
-    if item_number == "" or item_number is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
-    if item_number != "1" and item_number != "2":
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
+    comparison_check(hash_code, item_number)
     result = resolve_get_comparison_properties(hash_code, item_number)
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
+
+
+def comparison_check(hash_code, item_number):
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
+    if item_number == "" or item_number is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
+    if item_number != "1" and item_number != "2":
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
 
 
 @app.route('/api/entity/analysis/information', methods=['GET'])
@@ -259,11 +258,7 @@ def get_property_analysis():
 @cross_origin()
 def get_entities_count():
     hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    result = resolve_get_entities_count(hash_code)
-    if "errorMessage" in result:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    result = check_hash_code_and_call_resolver(hash_code, resolve_get_entities_count)
     return json.dumps(result)
 
 
@@ -271,11 +266,7 @@ def get_entities_count():
 @cross_origin()
 def get_dashboard_info():
     hash_code = request.args.get("hash_code")
-    if hash_code == "" or hash_code is None:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
-    result = resolve_get_dashboard_info(hash_code)
-    if "errorMessage" in result:
-        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    result = check_hash_code_and_call_resolver(hash_code, resolve_get_dashboard_info)
     return json.dumps(result)
 
 

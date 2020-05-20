@@ -11,7 +11,7 @@ class Dashboards(db.Model):
     filters = db.Column(db.String(), default="[]")
     properties = db.Column(db.String(), default="[]")
     timestamp = db.Column(db.String())
-    instances = db.Column(db.JSON(), default={})
+    # instances = db.Column(db.JSON(), default={})
     compare_filters = db.Column(db.String(), default="[]")
     analysis_filters = db.Column(db.String(), default="[]")
     additional_filters = db.Column(db.String(), default="[]")
@@ -51,7 +51,7 @@ class Dashboards(db.Model):
             'filters': self.filters,
             'properties': self.properties,
             'timestamp': self.timestamp,
-            'instances': self.instances,
+            # 'instances': self.instances,
             'compareFilters': self.compare_filters,
             'analysisFilters': self.analysis_filters,
             'additionalFilters': self.additional_filters,

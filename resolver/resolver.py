@@ -10,8 +10,6 @@ from resolver.resolve_card import resolve_get_entities_count_result
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
     resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result, \
     resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result, resolve_get_entity_info_result
-from resolver.resolve_property_gap import resolve_get_property_gap_bounded_api_sandbox, \
-    resolve_get_property_gap_unbounded_api_sandbox
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
     resolve_get_filter_suggestions_result, resolve_get_wikidata_entities_result
 from resolver.resolver_comparison import resolve_get_comparison_gini_result, resolve_get_comparison_properties_result
@@ -119,8 +117,8 @@ def resolve_edit_dashboard(data):
     analysis_info = resolve_get_analysis_properties_info_result(single_dashboard)
     single_dashboard.analysis_info = analysis_info
 
-    if "entityID" in data or "filters" in data or "properties" in data:
-        single_dashboard.instances = {}
+    # if "entityID" in data or "filters" in data or "properties" in data:
+    #     single_dashboard.instances = {}
 
     db.session.commit()
     result = {"result": "success"}
@@ -132,19 +130,19 @@ def resolve_get_properties_info(hash_code):
     return resolve_get_properties_info_result(single_dashboard)
 
 
-def resolve_get_property_gap_api_sandbox(hash_code):
-    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
-    instances = single_dashboard.instances
-    if "entities" not in instances:
-        return {"errorMessage", "entities not found"}
-    entities = instances["entities"]
-    if len(entities) == 0:
-        return {"errorMessage": "list of entities is impty"}
-    sample_entity_obj = entities[0]
-    if "entityProperties" in sample_entity_obj:
-        return resolve_get_property_gap_bounded_api_sandbox(entities)
-    else:
-        return resolve_get_property_gap_unbounded_api_sandbox(entities)
+# def resolve_get_property_gap_api_sandbox(hash_code):
+#     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+#     instances = single_dashboard.instances
+#     if "entities" not in instances:
+#         return {"errorMessage", "entities not found"}
+#     entities = instances["entities"]
+#     if len(entities) == 0:
+#         return {"errorMessage": "list of entities is impty"}
+#     sample_entity_obj = entities[0]
+#     if "entityProperties" in sample_entity_obj:
+#         return resolve_get_property_gap_bounded_api_sandbox(entities)
+#     else:
+#         return resolve_get_property_gap_unbounded_api_sandbox(entities)
 
 
 def resolve_get_entity_gini_by_hash(hash_code, prop):
@@ -157,10 +155,6 @@ def resolve_get_entity_gini_by_hash(hash_code, prop):
     has_property = prop
 
     result = resolve_gini_with_filters_unbounded(entity_id, filters, has_property)
-    entities = {"entities": result["entities"]}
-    json_entities = json.loads(json.dumps(entities))
-    single_dashboard.instances = json_entities
-    db.session.commit()
 
     return result
 
@@ -267,5 +261,28 @@ def resolve_duplicate_dashboard(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = {}
+    row_data = single_dashboard.serialize()
+    duplicate_hash_code = ""
+    timestamp = str(time.time())
+    uuid_string = str(uuid.uuid4())
+    hash_code = uuid_string.split("-")[-1]
+    try:
+        dashboard = Dashboards(
+            name=row_data["name"],
+            author=row_data["author"],
+            entity=row_data["entity"],
+            hash_code=hash_code,
+            timestamp=timestamp,
+        )
+        dashboard.filters = row_data["filters"]
+        dashboard.compare_filters = row_data["compareFilters"]
+        dashboard.analysis_filters  = row_data["analysisFilters"]
+        dashboard.entity_info = row_data['entityInfo']
+        dashboard.filters_info = row_data['filtersInfo']
+        db.session.add(dashboard)
+        db.session.commit()
+    except Exception as e:
+        return {"errorMessage": str(e)}
+
+    result = {"hash_code": duplicate_hash_code}
     return result
