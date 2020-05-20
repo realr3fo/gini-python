@@ -92,6 +92,25 @@ def get_insight(data):
 
 
 # noinspection PyTypeChecker
+def get_new_histogram_data(q_arr):
+    property_count = [q_arr[i][1] for i in range(len(q_arr))]
+    import numpy as np
+    uniq_keys = np.unique(property_count)
+    bins = uniq_keys.searchsorted(property_count)
+    bins = np.bincount(bins)
+    actual_s = [int(elem) for elem in uniq_keys]
+    max_num = max(actual_s)
+    labels = []
+    for elem in actual_s:
+        label = elem * 100 / max_num
+        labels.append(round(label, 2))
+
+    entities_data = [int(elem) for elem in bins]
+
+    result = {"label": labels, "actual": actual_s, "data": entities_data}
+    return result
+
+
 def construct_results_gini(q_arr, query=""):
     from resolver.resolver import LIMITS
 
@@ -131,10 +150,12 @@ def construct_results_gini(q_arr, query=""):
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
 
+    new_histogram_data = get_new_histogram_data(q_arr)
+
     query_link = "https://query.wikidata.org/#" + urllib.parse.quote(query)
 
     result = {"limit": LIMITS, "query_link": query_link, "amount": each_amount[-1], "gini": gini_coefficient,
-              "each_amount": each_amount, "histogramData": histogram_data,
+              "each_amount": each_amount, "histogramData": histogram_data, "newHistogramData": new_histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}
     return result
