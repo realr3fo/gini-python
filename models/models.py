@@ -1,31 +1,6 @@
 from main import db
 
 
-# class Logs(db.Model):
-#     __tablename__ = 'logs'
-#
-#     id = db.Column(db.Integer, primary_key=True)
-#     entity = db.Column(db.String())
-#     properties = db.Column(db.String())
-#     timestamp = db.Column(db.String())
-#
-#     def __init__(self, entity, properties, timestamp):
-#         self.entity = entity
-#         self.properties = properties
-#         self.timestamp = timestamp
-#
-#     def __repr__(self):
-#         return '<id {}>'.format(self.id)
-#
-#     def serialize(self):
-#         return {
-#             'id': self.id,
-#             'entity': self.entity,
-#             'properties': self.properties,
-#             'timestamp': self.timestamp
-#         }
-
-
 class Dashboards(db.Model):
     __tablename__ = 'dashboards'
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +19,7 @@ class Dashboards(db.Model):
     filters_info = db.Column(db.JSON(), default={})
     properties_info = db.Column(db.JSON(), default={})
     analysis_info = db.Column(db.JSON(), default={})
+    public = db.Column(db.Boolean, default=True)
 
     def __init__(self, name, author, entity, hash_code, timestamp):
         self.name = name
@@ -83,3 +59,14 @@ class Dashboards(db.Model):
             "filtersInfo": self.filters_info,
             "propertiesInfo": self.properties_info
         }
+
+
+class Analysis(db.Model):
+    __tablename__ = 'analysis'
+    id = db.Column(db.Integer, primary_key=True)
+    dashboard_id = db.Column(db.Integer, db.ForeignKey('dashboards.id'))
+    filter_limit = db.Column(db.JSON, default={})
+    shown_combinations = db.Column(db.JSON, default={})
+
+    def __init__(self, dashboard_id):
+        self.dashboard_id = dashboard_id

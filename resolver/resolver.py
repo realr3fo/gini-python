@@ -21,6 +21,29 @@ ENDPOINT_URL = "https://query.wikidata.org/sparql"
 LIMITS = {"unbounded": 10000, "bounded": 10000, "property_gap": 1000}
 
 
+def save_dashboard_to_db(data):
+    name = data['name']
+    author = data['author']
+    entity = data['entity']
+    hash_code = data['hash_code']
+    timestamp = str(time.time())
+    try:
+        dashboard = Dashboards(
+            name=name,
+            author=author,
+            entity=entity,
+            hash_code=hash_code,
+            timestamp=timestamp,
+        )
+        if 'filters' in data:
+            dashboard.filters = str(data['filters'])
+        db.session.add(dashboard)
+        db.session.commit()
+        return "success"
+    except Exception as e:
+        return str(e)
+
+
 def resolve_get_wikidata_entities(search):
     return resolve_get_wikidata_entities_result(search)
 
@@ -131,21 +154,13 @@ def resolve_get_entity_gini_by_hash(hash_code, prop):
 
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
-    properties = eval(single_dashboard.properties)
     has_property = prop
 
-    if len(properties) == 0:
-        result = resolve_gini_with_filters_unbounded(entity_id, filters, has_property)
-        entities = {"entities": result["entities"]}
-        json_entities = json.loads(json.dumps(entities))
-        single_dashboard.instances = json_entities
-        db.session.commit()
-    else:
-        result = resolve_gini_with_filters_bounded(entity_id, filters, properties, has_property)
-        entities = {"entities": result["entities"]}
-        json_entities = json.loads(json.dumps(entities))
-        single_dashboard.instances = json_entities
-        db.session.commit()
+    result = resolve_gini_with_filters_unbounded(entity_id, filters, has_property)
+    entities = {"entities": result["entities"]}
+    json_entities = json.loads(json.dumps(entities))
+    single_dashboard.instances = json_entities
+    db.session.commit()
 
     return result
 
@@ -176,11 +191,11 @@ def resolve_get_comparison_gini(hash_code, item_number):
     return result
 
 
-def resolve_get_comparison_properties(hash_code):
+def resolve_get_comparison_properties(hash_code, item_number):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_comparison_properties_result(single_dashboard)
+    result = resolve_get_comparison_properties_result(single_dashboard, item_number)
     return result
 
 
@@ -247,24 +262,10 @@ def resolve_get_entity_info(entity_id):
     result = resolve_get_entity_info_result(entity_id)
     return result
 
-def save_dashboard_to_db(data):
-    name = data['name']
-    author = data['author']
-    entity = data['entity']
-    hash_code = data['hash_code']
-    timestamp = str(time.time())
-    try:
-        dashboard = Dashboards(
-            name=name,
-            author=author,
-            entity=entity,
-            hash_code=hash_code,
-            timestamp=timestamp,
-        )
-        if 'filters' in data:
-            dashboard.filters = str(data['filters'])
-        db.session.add(dashboard)
-        db.session.commit()
-        return "success"
-    except Exception as e:
-        return str(e)
+
+def resolve_duplicate_dashboard(hash_code):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    result = {}
+    return result

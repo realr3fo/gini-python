@@ -1,9 +1,8 @@
 #!venv/bin/python3
 import http
-import json
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from flask import Flask, request, abort
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
@@ -34,6 +33,7 @@ def get_gini_with_filters():
         if hash_code == "" or hash_code is None:
             abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
         prop = request.args.get('property')
+        result = {}
         try:
             result = resolve_get_entity_gini_by_hash(hash_code, prop)
         except Exception as e:
@@ -94,17 +94,6 @@ def create_dashboard():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
 
-
-# @app.route('/api/dashboard/edit', methods=['POST'])
-# @cross_origin()
-# def edit_dashboard():
-#     body = request.json
-#     if body is None or "hashCode" not in body:
-#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include hash code")
-#     result = resolve_edit_dashboard(body)
-#     if "errorMessage" in result:
-#         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
-#     return json.dumps(result)
 
 def edit_dashboard(body):
     if body is None or "hashCode" not in body:
@@ -192,6 +181,7 @@ def get_comparison_gini():
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include item_number")
     if item_number != "1" and item_number != "2":
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Invalid item_number")
+    result = {}
     try:
         result = resolve_get_comparison_gini(hash_code, item_number)
     except Exception as e:
@@ -237,6 +227,7 @@ def get_gini_analysis():
     hash_code = request.args.get("hash_code")
     if hash_code == "" or hash_code is None:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code")
+    result = {}
     try:
         result = resolve_get_gini_analysis(hash_code)
     except Exception as e:
@@ -306,6 +297,23 @@ def get_entity_info():
         abort(abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include entity_id"))
     result = resolve_get_entity_info(entity_id)
     return json.dumps(result)
+
+
+@app.route('/api/dashboard/duplicate', methods=['GET'])
+@cross_origin()
+def get_duplicate_dashboard():
+    hash_code = request.args.get("hash_code")
+    result = check_hash_code_and_call_resolver(hash_code, resolve_duplicate_dashboard)
+    return json.dumps(result)
+
+
+def check_hash_code_and_call_resolver(hash_code, resolver):
+    if hash_code == "" or hash_code is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hashcode")
+    result = resolver(hash_code)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return result
 
 
 if __name__ == '__main__':

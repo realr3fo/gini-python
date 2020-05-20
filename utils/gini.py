@@ -1,18 +1,6 @@
 import math
 
-from utils.utils import chunks
-
-
-# def calculate_gini(q_arr):
-#     n = len(q_arr)
-#     sum_prop = sum(elem[1] for elem in q_arr)
-#     calculate_top_sum = sum((n + 1 - (i + 1)) * q_arr[i][1] for i in range(len(q_arr)))
-#     right_below_gini_coefficient = n * sum_prop
-#     right_top_gini_coefficient = 2 * calculate_top_sum
-#     right_gini_coefficient = float(right_top_gini_coefficient) / float(right_below_gini_coefficient)
-#     left_gini_coefficient = float(n + 1) / float(n)
-#     gini_coefficient = left_gini_coefficient - right_gini_coefficient
-#     return gini_coefficient
+from utils.utils import chunks, interpolated
 
 
 def calculate_gini(q_arr):
@@ -77,3 +65,71 @@ def get_cumulative_data_and_entities(chunked_q_arr):
         counter += 1
         cumulative_data.append(cumulative)
     return cumulative_data, entities
+
+
+def get_ten_percentile(data):
+    n = len(data)
+    percentiles = []
+    for i in range(n):
+        percentile = 10 * ((i + 1) - 0.5) / n
+        percentile = math.ceil(percentile)
+        percentiles.append(str(percentile * 10) + "%")
+    return percentiles
+
+
+def get_insight(data):
+    data_length = len(data) - 1
+    eight_percentile = round(0.8 * data_length)
+    percentile_eight_data = data[eight_percentile]
+    gap_diff = 1.0 - percentile_eight_data
+    gap_percentage = gap_diff * 100
+    gap_rounded = round(gap_percentage)
+
+    result = "The top 20%% population of the class amounts to %d%% cumulative number of properties." % gap_rounded
+    return result
+
+
+def construct_results_gini(q_arr):
+    from resolver.resolver import LIMITS
+
+    q_arr = sorted(q_arr, key=lambda x: x[1])
+    gini_coefficient = calculate_gini(q_arr)
+    gini_coefficient = round(gini_coefficient, 3)
+    if len(q_arr) >= LIMITS["unbounded"]:
+        exceed_limit = True
+    else:
+        exceed_limit = False
+
+    chunked_q_arr = get_chunked_arr(q_arr)
+    each_amount = []
+    count = 0
+    for arr in chunked_q_arr:
+        count += len(arr)
+        each_amount.append(count)
+    cumulative_data, entities = get_cumulative_data_and_entities(chunked_q_arr)
+    from collections import Counter
+    property_counts = Counter(item['propertyCount'] for item in entities if item.get('propertyCount'))
+    histogram_data = [count for _, count in property_counts.items()]
+    if len(histogram_data) > 10:
+        chunked_histogram_arr = get_chunked_arr(histogram_data)
+        histogram_data = []
+        for elem in chunked_histogram_arr:
+            histogram_data.append(sum(elem))
+    histogram_data = interpolated(histogram_data)
+    histogram_data.insert(0, 0)
+    original_data = list(cumulative_data)
+    cumulative_data.insert(0, 0)
+    data = normalize_data(cumulative_data)
+    for idx in range(len(data)):
+        max_num = 0.1 * idx
+        if data[idx] > max_num:
+            data[idx] = max_num
+    insight = get_insight(data)
+    percentiles = get_ten_percentile(original_data)
+    percentiles.insert(0, '0%')
+
+    result = {"limit": LIMITS, "amount": each_amount[-1], "gini": gini_coefficient,
+              "each_amount": each_amount, "histogramData": histogram_data,
+              "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
+              "insight": insight, "entities": entities}
+    return result
