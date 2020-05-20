@@ -3,7 +3,7 @@ import time
 import uuid
 
 from main import db
-from models.models import Dashboards
+from models.models import Dashboards, Analysis
 from resolver.resolve_analysis import resolve_get_analysis_information_result, resolve_get_gini_analysis_result, \
     resolve_get_property_analysis_result
 from resolver.resolve_card import resolve_get_entities_count_result
@@ -35,7 +35,17 @@ def save_dashboard_to_db(data):
         )
         if 'filters' in data:
             dashboard.filters = str(data['filters'])
+        if 'compareFilters' in data:
+            dashboard.compare_filters = str(data['compareFilters'])
+        if 'analysisFilters' in data:
+            dashboard.analysis_filters = str(data['analysisFilters'])
+
         db.session.add(dashboard)
+        db.session.flush()
+        analysis = Analysis(
+            dashboard_id=dashboard.id
+        )
+        db.session.add(analysis)
         db.session.commit()
         return "success"
     except Exception as e:
@@ -204,7 +214,13 @@ def resolve_get_gini_analysis(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_gini_analysis_result(single_dashboard)
+    analysis_dashboard = Analysis.query.filter_by(dashboard_id=single_dashboard.id).first()
+    shown_combinations = analysis_dashboard.shown_combinations
+    filter_limit = analysis_dashboard.filter_limit
+    result = resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filter_limit)
+    analysis_dashboard.shown_combinations = result["combinations"]
+    analysis_dashboard.filter_limit = [2, result["max_number"]]
+    db.session.commit()
     return result
 
 
@@ -239,6 +255,9 @@ def resolve_get_dashboard_info(hash_code):
     analysis_info = resolve_get_analysis_properties_info_result(single_dashboard)
     result["analysisInfo"] = analysis_info
     single_dashboard.analysis_info = analysis_info
+    analysis_dashboard = Analysis.query.filter_by(dashboard_id=single_dashboard.id).first()
+    result["filterLimit"] = analysis_dashboard.filter_limit
+    result["shownCombinations"] = analysis_dashboard.shown_combinations
 
     db.session.commit()
     return result
@@ -264,23 +283,17 @@ def resolve_duplicate_dashboard(hash_code):
     timestamp = str(time.time())
     uuid_string = str(uuid.uuid4())
     duplicate_hash_code = uuid_string.split("-")[-1]
-    try:
-        dashboard = Dashboards(
-            name=row_data["name"],
-            author=row_data["author"],
-            entity=row_data["entity"],
-            hash_code=duplicate_hash_code,
-            timestamp=timestamp,
-        )
-        dashboard.filters = row_data["filters"]
-        dashboard.compare_filters = row_data["compareFilters"]
-        dashboard.analysis_filters = row_data["analysisFilters"]
-        dashboard.entity_info = row_data['entityInfo']
-        dashboard.filters_info = row_data['filtersInfo']
-        db.session.add(dashboard)
-        db.session.commit()
-    except Exception as e:
-        return {"errorMessage": str(e)}
+    data = {
+        "name": row_data["name"],
+        "author": row_data["author"],
+        "entity": row_data["entity"],
+        "hash_code": duplicate_hash_code,
+        "timestamp": timestamp,
+        "filters": row_data["filters"],
+        "compareFilters": row_data["compareFilters"],
+        "analysisFilters": row_data["analysisFilters"],
+    }
+    save_dashboard_to_db(data)
 
     result = {"hash_code": duplicate_hash_code}
     return result
@@ -294,6 +307,31 @@ def resolve_set_dashboard_status(hash_code, status):
         single_dashboard.public = True
     else:
         single_dashboard.public = False
+    db.session.commit()
+    result = {"result": "success"}
+    return result
+
+
+def resolve_set_analysis_custom(hash_code, min_filter, max_filter, shown_combinations):
+    single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
+    if single_dashboard is None:
+        return {"errorMessage": "data with the given hash code was not found"}
+    analysis_dashboard = Analysis.query.filter_by(dashboard_id=single_dashboard.id).first()
+    analysis_combinations = analysis_dashboard.shown_combinations
+    if shown_combinations != "":
+        for comb in analysis_combinations:
+            for elem in shown_combinations:
+                if comb["item_1"] == elem["item_1"] and comb["item_2"] == elem["item_2"]:
+                    comb["shown"] = elem["shown"]
+                if comb["item_1"] == elem["item_1"] and "item_2" not in comb:
+                    comb["shown"] = elem["shown"]
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(analysis_dashboard, "shown_combinations")
+        analysis_dashboard.shown_combinations = analysis_combinations
+    if min_filter != "" and max_filter != "":
+        filter_limit = [int(min_filter), int(max_filter)]
+        analysis_dashboard.filter_limit = filter_limit
+
     db.session.commit()
     result = {"result": "success"}
     return result

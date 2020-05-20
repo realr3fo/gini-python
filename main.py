@@ -322,5 +322,21 @@ def check_hash_code_and_call_resolver(hash_code, resolver):
     return result
 
 
+@app.route('/api/analysis/custom', methods=['POST'])
+@cross_origin()
+def set_analysis_custom():
+    body = request.json
+    if "hash_code" not in body:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include dashboard hash_code in body")
+    hash_code = body["hash_code"]
+    min_filter = body.get("min_filter", "")
+    max_filter = body.get("max_filter", "")
+    shown_combinations = body.get("shown_combinations", "")
+    result = resolve_set_analysis_custom(hash_code, min_filter, max_filter, shown_combinations)
+    if "errorMessage" in result:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

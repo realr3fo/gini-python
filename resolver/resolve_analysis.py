@@ -1,7 +1,8 @@
 import asyncio
 import itertools
 
-from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data
+from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data, get_insight, \
+    get_ten_percentile
 from utils.wikidata import get_results, async_get_results
 
 
@@ -114,9 +115,8 @@ async def get_gini_analysis_from_wikidata(obj_ids, obj_labels, filter_query, ent
     return item_arr
 
 
-def resolve_get_gini_analysis_result(single_dashboard):
+def resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filter_limit):
     from resolver.resolver import LIMITS, ENDPOINT_URL
-    from resolver.resolver_gini import get_insight, get_ten_percentile
     entity_id = single_dashboard.entity
     filters = eval(single_dashboard.filters)
     analysis_filters = eval(single_dashboard.analysis_filters)
@@ -176,15 +176,16 @@ def resolve_get_gini_analysis_result(single_dashboard):
     combinations = []
     if len(obj_ids_arr) == 1:
         for product in obj_values[obj_ids_arr[0]]:
-            obj = {"item_1": product}
+            obj = {"item_1": product, "shown": True}
             combinations.append(obj)
     if len(obj_ids_arr) == 2:
         products = list(itertools.product(obj_values[obj_ids_arr[0]], obj_values[obj_ids_arr[1]]))
         for product in products:
-            obj = {"item_1": product[0], "item_2": product[1]}
+            obj = {"item_1": product[0], "item_2": product[1], "shown": True}
             combinations.append(obj)
 
     analysis_results = []
+    max_number_of_items = 0
     for combination in combinations:
         new_q_arr = []
         obj_1_label = objects_label[combination["item_1"]]
@@ -253,6 +254,10 @@ def resolve_get_gini_analysis_result(single_dashboard):
         property_count_arr = [x[1] for x in new_q_arr]
         statistics = get_analysis_statistics(property_count_arr)
 
+        amount = each_amount[-1]
+        if amount > max_number_of_items:
+            max_number_of_items = amount
+
         result = {"analysis_info": single_analysis_info, "statistics": statistics, "limit": LIMITS,
                   "amount": each_amount[-1], "histogram_data": histogram_data,
                   "gini": gini_coefficient,
@@ -260,7 +265,8 @@ def resolve_get_gini_analysis_result(single_dashboard):
                   "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
                   "insight": insight}
         analysis_results.append(result)
-    result = {"total_entities_amount": total_amount, "data": analysis_results}
+    result = {"total_entities_amount": total_amount, "max_number": max_number_of_items, "combinations": combinations,
+              "data": analysis_results}
     return result
 
 

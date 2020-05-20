@@ -66,8 +66,10 @@ class Analysis(db.Model):
     __tablename__ = 'analysis'
     id = db.Column(db.Integer, primary_key=True)
     dashboard_id = db.Column(db.Integer, db.ForeignKey('dashboards.id'))
-    filter_limit = db.Column(db.JSON, default={})
-    shown_combinations = db.Column(db.JSON, default={})
+    filter_limit = db.Column(db.JSON, default=[2, 10000])
+    shown_combinations = db.Column(db.JSON, default=[])
+    analysis_filters = db.Column(db.String(), default="[]")
+    analysis_info = db.Column(db.JSON(), default=[])
 
     def __init__(self, dashboard_id):
         self.dashboard_id = dashboard_id
