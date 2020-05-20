@@ -2,7 +2,7 @@ import asyncio
 import itertools
 
 from utils.gini import calculate_gini, get_chunked_arr, get_cumulative_data_and_entities, normalize_data, get_insight, \
-    get_ten_percentile
+    get_ten_percentile, get_new_histogram_data
 from utils.wikidata import get_results, async_get_results
 
 
@@ -254,12 +254,14 @@ def resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filte
         property_count_arr = [x[1] for x in new_q_arr]
         statistics = get_analysis_statistics(property_count_arr)
 
+        new_histogram_data = get_new_histogram_data(q_arr)
+
         amount = each_amount[-1]
         if amount > max_number_of_items:
             max_number_of_items = amount
 
         result = {"analysis_info": single_analysis_info, "statistics": statistics, "limit": LIMITS,
-                  "amount": each_amount[-1], "histogram_data": histogram_data,
+                  "amount": each_amount[-1], "histogram_data": histogram_data, "newHistogramData": new_histogram_data,
                   "gini": gini_coefficient,
                   "each_amount": each_amount,
                   "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
