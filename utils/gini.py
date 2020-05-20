@@ -144,7 +144,7 @@ def construct_results_gini(q_arr, query=""):
     data = normalize_data(cumulative_data)
     for idx in range(len(data)):
         max_num = 0.1 * idx
-        if data[idx] > max_num:
+        if max_num < data[idx] < 1.0:
             data[idx] = max_num
     insight = get_insight(data)
     percentiles = get_ten_percentile(original_data)
