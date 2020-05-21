@@ -112,37 +112,42 @@ def get_new_histogram_data(q_arr):
     actual_s = [int(elem) for elem in uniq_keys]
     entities_data = [int(elem) for elem in bins]
     max_num = max(actual_s)
-    labels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    actual_result = [[0]]
-    range_arr = []
-    for elem in labels:
-        calculate_range = elem * 0.01 * max_num
-        range_arr.append(calculate_range)
-    range_before = 0
-    entities_data_result = [0]
-    count = 0
-    range_arr = range_arr[1:]
-    for single_range in range_arr:
-        current_actual_s = []
-        current_count = 0
-        for elem in zip(actual_s, entities_data):
-            if range_before < elem[0] <= single_range:
-                current_actual_s.append(elem[0])
-                current_count += elem[1]
-        count += 1
-        range_before = single_range
-        actual_result.append(current_actual_s)
-        entities_data_result.append(current_count)
-    show = []
-    for elem in entities_data_result:
-        if elem == 0:
-            show.append(0)
-        else:
-            show.append(1)
+    # labels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    # actual_result = [[0]]
+    # range_arr = []
+    # for elem in labels:
+    #     calculate_range = elem * 0.01 * max_num
+    #     range_arr.append(calculate_range)
+    # range_before = 0
+    # entities_data_result = [0]
+    # count = 0
+    # range_arr = range_arr[1:]
+    # for single_range in range_arr:
+    #     current_actual_s = []
+    #     current_count = 0
+    #     for elem in zip(actual_s, entities_data):
+    #         if range_before < elem[0] <= single_range:
+    #             current_actual_s.append(elem[0])
+    #             current_count += elem[1]
+    #     count += 1
+    #     range_before = single_range
+    #     actual_result.append(current_actual_s)
+    #     entities_data_result.append(current_count)
+    # show = []
+    # for elem in entities_data_result:
+    #     if elem == 0:
+    #         show.append(0)
+    #     else:
+    #         show.append(1)
 
-    entities_data_result = remove_zeros(entities_data_result)
+    # entities_data_result = remove_zeros(entities_data_result)
+    mapping_prop_count = dict(zip(actual_s, entities_data))
+    raw_data = []
+    for i in range(max_num + 1):
+        num = mapping_prop_count.get(i, 0)
+        raw_data.append(num)
 
-    result = {"label": labels, "actual": actual_result, "data": entities_data_result, "show": show}
+    result = {"raw_data": raw_data}
     return result
 
 
