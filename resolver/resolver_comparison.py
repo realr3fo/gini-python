@@ -6,8 +6,8 @@ from utils.wikidata import async_get_results, get_results
 
 async def get_gini_from_wikidata(entity, filter_query, offset_count):
     from resolver.resolver import ENDPOINT_URL
-    limit = 1000
-    offset = offset_count * 1000
+    limit = 2500
+    offset = offset_count * 2500
     query = """
                 SELECT ?item ?itemLabel ?cnt {
                     {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) {
@@ -63,7 +63,7 @@ def resolve_get_comparison_gini_unbounded(data):
     asyncio.set_event_loop(loop)
     tasks = []
     # create instance of Semaphore
-    for i in range(10):
+    for i in range(4):
         task = loop.create_task(get_gini_from_wikidata(entity_id, filter_query, i))
         tasks.append(task)
     query_results_arr = loop.run_until_complete(asyncio.gather(*tasks))

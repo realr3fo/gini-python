@@ -91,7 +91,15 @@ def get_insight(data):
     return result
 
 
-# noinspection PyTypeChecker
+def remove_zeros(arr):
+    prev = 0
+    for i in range(len(arr)):
+        if arr[i] == 0:
+            arr[i] = prev
+        prev = arr[i]
+    return arr
+
+
 def get_new_histogram_data(q_arr):
     property_count = [q_arr[i][1] for i in range(len(q_arr))]
     import numpy as np
@@ -99,15 +107,39 @@ def get_new_histogram_data(q_arr):
     bins = uniq_keys.searchsorted(property_count)
     bins = np.bincount(bins)
     actual_s = [int(elem) for elem in uniq_keys]
-    max_num = max(actual_s)
-    labels = []
-    for elem in actual_s:
-        label = elem * 100 / max_num
-        labels.append(round(label, 2))
-
     entities_data = [int(elem) for elem in bins]
+    max_num = max(actual_s)
+    labels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    actual_result = [[0]]
+    range_arr = []
+    for elem in labels:
+        calculate_range = elem * 0.01 * max_num
+        range_arr.append(calculate_range)
+    range_before = 0
+    entities_data_result = [0]
+    count = 0
+    range_arr = range_arr[1:]
+    for single_range in range_arr:
+        current_actual_s = []
+        current_count = 0
+        for elem in zip(actual_s, entities_data):
+            if range_before < elem[0] <= single_range:
+                current_actual_s.append(elem[0])
+                current_count += elem[1]
+        count += 1
+        range_before = single_range
+        actual_result.append(current_actual_s)
+        entities_data_result.append(current_count)
+    show = []
+    for elem in entities_data_result:
+        if elem == 0:
+            show.append(0)
+        else:
+            show.append(1)
 
-    result = {"label": labels, "actual": actual_s, "data": entities_data}
+    entities_data_result = remove_zeros(entities_data_result)
+
+    result = {"label": labels, "actual": actual_result, "data": entities_data_result, "show": show}
     return result
 
 
