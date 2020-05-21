@@ -1,5 +1,8 @@
+import calendar
+import csv
 import math
 import re
+import time
 import urllib.parse
 
 from utils.utils import chunks, interpolated
@@ -143,7 +146,7 @@ def get_new_histogram_data(q_arr):
     return result
 
 
-def construct_results_gini(q_arr, query=""):
+def construct_results_gini(q_arr, source="", query=""):
     from resolver.resolver import LIMITS
 
     q_arr = sorted(q_arr, key=lambda x: x[1])
@@ -180,7 +183,7 @@ def construct_results_gini(q_arr, query=""):
         percentile = (i + 1) / n
         percentile = round(percentile, 1)
         absolute_line.append(percentile)
-    absolute_line.insert(0,0)
+    absolute_line.insert(0, 0)
     for idx in range(len(data)):
         max_num = absolute_line[idx]
         if max_num < data[idx]:
@@ -194,7 +197,29 @@ def construct_results_gini(q_arr, query=""):
 
     query_link = "https://query.wikidata.org/#" + urllib.parse.quote(query)
 
-    result = {"limit": LIMITS, "query_link": query_link, "amount": each_amount[-1], "gini": gini_coefficient,
+    from flask import request
+    from main import app
+    sparql_download_link = ""
+    if source == "profile":
+        ts = calendar.timegm(time.gmtime())
+        file_name = app.config["CLIENT_SPARQL"] + "/" + str(ts) + ".sparql"
+        with open(file_name, "w") as fo:
+            fo.write(query)
+        sparql_download_link = request.url_root + "api/download/sparql?file_name=" + str(ts) + ".sparql"
+
+    csv_download_link = ""
+    if source == "profile":
+        ts = calendar.timegm(time.gmtime())
+        file_name = app.config["CLIENT_CSV"] + "/" + str(ts) + ".csv"
+        with open(file_name, "w") as fo:
+            file_writer = csv.writer(fo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writer.writerow(['entityID', 'entityLabel', 'entityLink', 'entityPropertyCount'])
+            for entity in entities:
+                file_writer.writerow([entity["entity"], entity["label"], entity["entityLink"], entity["propertyCount"]])
+        csv_download_link = request.url_root + "api/download/csv?file_name=" + str(ts) + ".csv"
+
+    result = {"limit": LIMITS, "query_link": query_link, "sparql_download_link": sparql_download_link,
+              "csv_download_link": csv_download_link, "amount": each_amount[-1], "gini": gini_coefficient,
               "each_amount": each_amount, "histogramData": histogram_data, "newHistogramData": new_histogram_data,
               "data": data, "exceedLimit": exceed_limit, "percentileData": percentiles,
               "insight": insight, "entities": entities}

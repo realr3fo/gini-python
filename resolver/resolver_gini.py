@@ -93,5 +93,5 @@ def resolve_gini_with_filters_unbounded(entity, filters, has_property):
                 item_has_property = False
         entity_obj = (item_id, property_count, item_label, item_link, item_has_property)
         q_arr.append(entity_obj)
-    result = construct_results_gini(q_arr, query)
+    result = construct_results_gini(q_arr, "profile", query)
     return result

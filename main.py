@@ -3,7 +3,7 @@ import http
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, request, abort
+from flask import Flask, request, abort, send_from_directory
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
@@ -336,6 +336,30 @@ def set_analysis_custom():
     if "errorMessage" in result:
         abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, result["errorMessage"])
     return json.dumps(result)
+
+
+@app.route('/api/download/sparql', methods=['GET'])
+@cross_origin()
+def get_sparql_file():
+    file_name = request.args.get("file_name")
+    if file_name == "" or file_name is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include file_name")
+    try:
+        return send_from_directory(app.config["CLIENT_SPARQL"], filename=file_name, as_attachment=True)
+    except FileNotFoundError:
+        abort(404, "File not found")
+
+
+@app.route('/api/download/csv', methods=['GET'])
+@cross_origin()
+def get_csv_file():
+    file_name = request.args.get("file_name")
+    if file_name == "" or file_name is None:
+        abort(http.HTTPStatus.INTERNAL_SERVER_ERROR, "Please include file_name")
+    try:
+        return send_from_directory(app.config["CLIENT_CSV"], filename=file_name, as_attachment=True)
+    except FileNotFoundError:
+        abort(404, "File not found")
 
 
 if __name__ == '__main__':

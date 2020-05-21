@@ -12,6 +12,8 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    CLIENT_SPARQL = basedir + "/client/sparql"
+    CLIENT_CSV = basedir + "/client/csv"
 
 
 class ProductionConfig(Config):
