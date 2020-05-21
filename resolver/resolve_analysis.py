@@ -145,8 +145,7 @@ def resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filte
     query_results_bindings = [item for sublist in query_results_arr for item in sublist]
     item_arr = query_results_bindings
     if len(item_arr) == 0:
-        result = {
-            "gini": 0, "data": [], "entities": []}
+        result = {"gini": 0, "data": [], "entities": []}
         return result
     q_arr = []
     obj_values = {}
@@ -211,7 +210,9 @@ def resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filte
 
         new_q_arr = sorted(new_q_arr, key=lambda x: x[1])
         if len(new_q_arr) == 0:
-            result = {"analysis_info": single_analysis_info, "statistics": {}, "limit": LIMITS, "amount": 0,
+            result = {"analysis_info": single_analysis_info, "statistics": {}, "limit": LIMITS,
+                      "amount": 0, "histogram_data": [],
+                      "newHistogramData": {},
                       "gini": 0,
                       "each_amount": [],
                       "data": [], "exceedLimit": False, "percentileData": [],
@@ -254,7 +255,7 @@ def resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filte
         property_count_arr = [x[1] for x in new_q_arr]
         statistics = get_analysis_statistics(property_count_arr)
 
-        new_histogram_data = get_new_histogram_data(q_arr)
+        new_histogram_data = get_new_histogram_data(new_q_arr)
 
         amount = each_amount[-1]
         if amount > max_number_of_items:

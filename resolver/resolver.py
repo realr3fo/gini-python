@@ -218,8 +218,8 @@ def resolve_get_gini_analysis(hash_code):
     shown_combinations = analysis_dashboard.shown_combinations
     filter_limit = analysis_dashboard.filter_limit
     result = resolve_get_gini_analysis_result(single_dashboard, shown_combinations, filter_limit)
-    analysis_dashboard.shown_combinations = result["combinations"]
-    analysis_dashboard.filter_limit = [2, result["max_number"]]
+    analysis_dashboard.shown_combinations = result.get("combinations", {})
+    analysis_dashboard.filter_limit = [2, result.get("max_number", 10000)]
     db.session.commit()
     return result
 
