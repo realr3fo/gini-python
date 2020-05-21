@@ -73,9 +73,9 @@ def get_ten_percentile(data):
     n = len(data)
     percentiles = []
     for i in range(n):
-        percentile = 10 * ((i + 1) - 0.5) / n
-        percentile = math.ceil(percentile)
-        percentiles.append(str(percentile * 10) + "%")
+        percentile = (i + 1) / n
+        percentile = round(percentile, 1)
+        percentiles.append(str(int(percentile * 100)) + "%")
     return percentiles
 
 
@@ -174,10 +174,18 @@ def construct_results_gini(q_arr, query=""):
     original_data = list(cumulative_data)
     cumulative_data.insert(0, 0)
     data = normalize_data(cumulative_data)
+    n = len(original_data)
+    absolute_line = []
+    for i in range(n):
+        percentile = (i + 1) / n
+        percentile = round(percentile, 1)
+        absolute_line.append(percentile)
+    absolute_line.insert(0,0)
     for idx in range(len(data)):
-        max_num = 0.1 * idx
-        if max_num < data[idx] < 1.0:
+        max_num = absolute_line[idx]
+        if max_num < data[idx]:
             data[idx] = max_num
+
     insight = get_insight(data)
     percentiles = get_ten_percentile(original_data)
     percentiles.insert(0, '0%')
