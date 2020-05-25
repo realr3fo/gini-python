@@ -341,6 +341,8 @@ def resolve_delete_dashboard(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
+    analysis_dashboard = Analysis.query.filter_by(dashboard_id=single_dashboard.id).first()
+    db.session.delete(analysis_dashboard)
     db.session.delete(single_dashboard)
     db.session.commit()
     result = {"result": "success"}
