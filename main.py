@@ -362,5 +362,13 @@ def get_csv_file():
         abort(404, "File not found")
 
 
+@app.route('/api/dashboard/delete', methods=['DELETE'])
+@cross_origin()
+def delete_dashboard():
+    hash_code = request.args.get("hash_code")
+    result = check_hash_code_and_call_resolver(hash_code, resolve_delete_dashboard)
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
