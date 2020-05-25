@@ -6,7 +6,7 @@ from main import db
 from models.models import Dashboards, Analysis
 from resolver.resolve_analysis import resolve_get_analysis_information_result, resolve_get_gini_analysis_result, \
     resolve_get_property_analysis_result
-from resolver.resolve_card import resolve_get_entities_count_result
+from resolver.resolve_card import resolve_get_entities_count_result, resolve_get_entities_same_as_profile
 from resolver.resolve_information import resolve_get_entity_information_result, resolve_get_properties_info_result, \
     resolve_get_dashboard_info_result, resolve_get_properties_info_compare_result, \
     resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result, resolve_get_entity_info_result
@@ -236,7 +236,7 @@ def resolve_get_entities_count(hash_code):
     single_dashboard = Dashboards.query.filter_by(hash_code=hash_code).first()
     if single_dashboard is None:
         return {"errorMessage": "data with the given hash code was not found"}
-    result = resolve_get_entities_count_result(single_dashboard)
+    result = resolve_get_entities_same_as_profile(single_dashboard)
     return result
 
 

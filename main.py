@@ -362,7 +362,7 @@ def get_csv_file():
         abort(404, "File not found")
 
 
-@app.route('/api/dashboard/delete', methods=['DELETE'])
+@app.route('/api/dashboard/delete', methods=['GET'])
 @cross_origin()
 def delete_dashboard():
     hash_code = request.args.get("hash_code")
