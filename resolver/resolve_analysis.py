@@ -89,27 +89,26 @@ def get_analysis_statistics(property_count_arr):
     return result
 
 
-async def get_gini_analysis_from_wikidata(obj_ids, obj_labels, filter_query, entity_id, offset_count):
+async def get_gini_analysis_from_wikidata(object_ids, object_labels, filter_query, entity_id, offset_count):
     from resolver.resolver import LIMITS, ENDPOINT_URL
     limit = 1000
     offset = offset_count * 1000
-    query = """
-                    SELECT ?item ?itemLabel ?cnt %s %s {
-                        {SELECT ?item %s (COUNT(DISTINCT(?prop)) AS ?cnt) {
-
-                        {SELECT DISTINCT %s ?item WHERE {
-                           ?item wdt:P31 wd:%s . 
-                           %s 
-                        } LIMIT %d offset %d}
-                        OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
-                        ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
-
-                        } GROUP BY ?item %s}
-
-                        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-
-                        } ORDER BY DESC(?cnt)
-                    """ % (obj_ids, obj_labels, obj_ids, obj_ids, entity_id, filter_query, limit, offset, obj_ids)
+    query = ("SELECT ?item ?itemLabel ?cnt {object_ids} {object_labels} {{\n"
+             "  {{SELECT ?item {object_ids} (COUNT(DISTINCT(?prop)) AS ?cnt) {{\n"
+             "\n"
+             "    {{SELECT DISTINCT ?item {object_ids} WHERE {{\n"
+             "      ?item wdt:P31 wd:{entity_id} . \n"
+             "      {filter_query}\n"
+             "    }} LIMIT {row_limit} OFFSET {offset} }}\n"
+             "    OPTIONAL {{ ?item ?p ?o . FILTER(CONTAINS(STR(?p),\"http://www.wikidata.org/prop/direct/\")) \n"
+             "              ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {{?prop wikibase:propertyType wikibase:ExternalId .}} }}\n"
+             "\n"
+             "  }} GROUP BY ?item {object_ids} }}\n"
+             "\n"
+             "  SERVICE wikibase:label {{ bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}\n"
+             "\n"
+             "}} ORDER BY DESC(?cnt)\n").format(object_ids=object_ids, object_labels=object_labels, entity_id=entity_id,
+                                                filter_query=filter_query, row_limit=limit, offset=offset)
     query_results = await async_get_results(ENDPOINT_URL, query)
     item_arr = query_results["results"]["bindings"]
     return item_arr

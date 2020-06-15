@@ -12,6 +12,7 @@ from resolver.resolve_information import resolve_get_entity_information_result, 
     resolve_get_compare_filters_info_result, resolve_get_analysis_properties_info_result, resolve_get_entity_info_result
 from resolver.resolve_suggestions import resolve_get_wikidata_properties_result, \
     resolve_get_filter_suggestions_result, resolve_get_wikidata_entities_result
+from resolver.resolve_wikidata_evaluation import resolve_get_wikidata_gini_analysis_result
 from resolver.resolver_comparison import resolve_get_comparison_gini_result, resolve_get_comparison_properties_result
 from resolver.resolver_gini import resolve_gini_with_filters_unbounded
 
@@ -346,4 +347,10 @@ def resolve_delete_dashboard(hash_code):
     db.session.delete(single_dashboard)
     db.session.commit()
     result = {"result": "success"}
+    return result
+
+
+def resolve_get_wikidata_gini_analysis(data):
+    limit = data["limit"]
+    result = resolve_get_wikidata_gini_analysis_result(limit)
     return result

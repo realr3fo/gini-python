@@ -38,19 +38,23 @@ async def get_gini_from_wikidata(entity, filter_query, has_property_query, offse
 
 
 def create_query(entity, filter_query, has_property_query, limit=1000):
-    query = """SELECT ?item ?itemLabel ?cnt ?p1 {
-    {SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {
-    {SELECT DISTINCT ?item WHERE {
-       ?item wdt:P31 wd:%s .
-       %s
-    } LIMIT %d}
-    OPTIONAL { ?item ?p ?o . FILTER(CONTAINS(STR(?p),"http://www.wikidata.org/prop/direct/")) 
-    ?prop wikibase:directClaim ?p . FILTER NOT EXISTS {?prop wikibase:propertyType wikibase:ExternalId .} }
-    %s
-    } GROUP BY ?item ?p1}
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-} ORDER BY DESC(?cnt)
-                """ % (entity, filter_query, limit, has_property_query)
+    print(has_property_query)
+    query = ("SELECT ?item ?itemLabel ?cnt ?p1 {{\n"
+             "        {{SELECT ?item (COUNT(DISTINCT(?prop)) AS ?cnt) ?p1 {{\n"
+             "        {{SELECT DISTINCT ?item WHERE {{\n"
+             "           ?item wdt:P31 wd:{entity_id} .\n"
+             "           {filter_query}\n"
+             "        }} LIMIT {row_limit}}}\n"
+             "        OPTIONAL {{ ?item ?p ?o . FILTER(CONTAINS(STR(?p),\"http://www.wikidata.org/prop/direct/\")) \n"
+             "?prop wikibase:directClaim ?p . FILTER NOT EXISTS {{?prop wikibase:propertyType wikibase:ExternalId .}} "
+             "}}\n "
+             "        {property_query}\n"
+             "        }} GROUP BY ?item ?p1}}\n"
+             "        SERVICE wikibase:label {{ bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}\n"
+             "    }} ORDER BY DESC(?cnt)\n"
+             "    ").format(entity_id=entity, filter_query=filter_query, row_limit=limit,
+                            property_query=has_property_query)
+
     return query
 
 

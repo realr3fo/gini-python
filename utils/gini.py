@@ -10,11 +10,11 @@ from utils.utils import chunks, interpolated
 
 def calculate_gini(q_arr):
     from statistics import mean
-    q_arr = [q_arr[i][1] for i in range(len(q_arr))]
-    q_arr = sorted(q_arr, reverse=True)
-    myu = mean(q_arr)
-    n = len(q_arr)
-    sum_y = sum((i + 1) * q_arr[i] for i in range(n))
+    property_counts = [q_arr[i][1] for i in range(len(q_arr))]
+    property_counts = sorted(property_counts, reverse=True)
+    myu = mean(property_counts)
+    n = len(property_counts)
+    sum_y = sum((i + 1) * property_counts[i] for i in range(n))
     result = 1 + (1 / n) - ((2 / (n * n * myu)) * sum_y)
     return result
 
