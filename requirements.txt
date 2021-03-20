@@ -17,7 +17,7 @@ gunicorn==19.2.0
 idna==2.9
 isodate==0.6.0
 itsdangerous==1.1.0
-Jinja2==2.11.1
+Jinja2==2.11.3
 Mako==1.1.2
 MarkupSafe==1.1.1
 multidict==4.7.5
